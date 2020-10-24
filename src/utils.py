@@ -1,10 +1,11 @@
-import torch
 import matplotlib.pyplot as plt
 import numpy as np
-from model import AutoEncoder
-from train import train
-from functional import *
 import scipy
+import torch
+
+from models.CAE import CAE
+from train import train
+
 
 def latent_space(model, n):
     _, axs = plt.subplots(n, n, figsize=(15,15))
@@ -23,7 +24,7 @@ def choose_bottleneck(X_test, X_train, X_valid, length, M, Lf):
 
     for bottleneck_nn in range(1,10):
         print("bottleneck:", bottleneck_nn)
-        model = AutoEncoder(length=length, Lf=Lf, M=M, bottleneck_nn=bottleneck_nn)
+        model = CAE(length=length, Lf=Lf, M=M, bottleneck_nn=bottleneck_nn)
         _, _ = train(model, X_train, X_valid, iters=3000, early_stopping_rounds=10, verbose=False)
 
         pred1 = model(X_test)

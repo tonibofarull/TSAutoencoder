@@ -1,19 +1,6 @@
 import numpy as np
-from PIL import Image
-import matplotlib.pyplot as plt
-import statsmodels.api as sm
 import pandas as pd
-
-def salt_pepper(im, d, L, sp):
-    for i in range(d):
-        for j in range(L):
-            if np.random.random() < sp:
-                im[i, j] = 255-im[i, j]
-    return im
-
-"""
-Each function produce a set of "n_images" images of size (d,L)
-"""
+import statsmodels.api as sm
 
 def sin_cos(n_images, length):
     docs = []
@@ -30,8 +17,8 @@ def sin_cos(n_images, length):
 
 def arma(n_images, length):
     docs = []
-    arparams = np.array([-0.1*0, 0,0,0,0,0,0, 0.5])
-    maparams = np.array([ 0.7*0, 0,0,0,0,0,0, 0.3])
+    arparams = np.array([-0.1, 0,0,0,0,0,0, 0.5])
+    maparams = np.array([ 0.7, 0,0,0,0,0,0, 0.3])
     ar = np.r_[1, -arparams]
     ma = np.r_[1,  maparams]
     arma_process = sm.tsa.ArmaProcess(ar, ma)
