@@ -1,22 +1,20 @@
 import torch
+import torch.nn.functional as F
 
-def VAE_loss(model, batch, lmd=0.1):
-    pred, mean, logvar = model.forward(batch, is_train=True)
+def VCAE_loss(model, batch, lmd=1):
+    pred, mean, logvar = model(batch, is_train=True)
 
-    recon = torch.mean((pred-batch)**2)
+    recon = F.mse_loss(pred,batch) # or binary_cross_entropy when [0,1]
     KL = 0.5 * torch.mean(torch.sum(torch.exp(logvar) + torch.square(mean) - 1.0 - logvar, dim=0))
+    # KL(p(x|z) || N(0,I))
 
     return recon + lmd*KL #+ my_l1(model)
 
 def MSE_regularized(model, batch):
     pred = model(batch)
-    return _my_mse(pred,batch) + _my_l1(model)
+    return F.mse_loss(pred,batch) + _my_l1(model)
 
 # UTILS
-
-def _my_mse(pred, real):
-    N = torch.numel(pred) # pred.shape[0]
-    return 1/N * torch.sum((pred-real)**2)
 
 def _my_l2(model, decay=0.01):
     l2 = 0

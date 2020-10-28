@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
+from sklearn.datasets import load_digits
 
 def sin_cos(n_images, length):
     docs = []
@@ -17,8 +18,8 @@ def sin_cos(n_images, length):
 
 def arma(n_images, length):
     docs = []
-    arparams = np.array([-0.1, 0,0,0,0,0,0, 0.5])
-    maparams = np.array([ 0.7, 0,0,0,0,0,0, 0.3])
+    arparams = np.array([-0.1, 0,0,0,0,0,0, 0.5]) # coef of y_{t-1}, y_{t-2}, ...
+    maparams = np.array([ 0.7, 0,0,0,0,0,0, 0.3]) # coef of e_{t-1}, e_{t-2}, ...
     ar = np.r_[1, -arparams]
     ma = np.r_[1,  maparams]
     arma_process = sm.tsa.ArmaProcess(ar, ma)

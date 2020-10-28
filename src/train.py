@@ -38,12 +38,14 @@ def train(model, X_train, X_valid, iters, early_stopping_rounds=10, batch_size=3
         if valid_running_loss < min_loss[0]:
             min_loss = (valid_running_loss, epoch)
 
-        if verbose and epoch%10 == 0:
+        end_train = early_stopping_rounds is not None and epoch > early_stopping_rounds and epoch-min_loss[1] >= early_stopping_rounds
+
+        if verbose and (epoch%10 == 0 or end_train):
             print(f"EPOCH {epoch} train loss: {train_running_loss}, valid loss: {valid_running_loss}")
             print(f"epochs without improvement: {epoch-min_loss[1]}")
             print()
 
-        if early_stopping_rounds is not None and epoch > early_stopping_rounds and epoch-min_loss[1] >= early_stopping_rounds:
+        if end_train:
             break
 
     print(f"Training Finished in {(time.time()-tini)}s")

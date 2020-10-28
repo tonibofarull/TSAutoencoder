@@ -1,6 +1,7 @@
 import torch
+import torch.nn.functional as F
 from torch import nn
-from models.losses import VAE_loss
+from models.losses import VCAE_loss
 
 class VCAE(nn.Module):
     def __init__(self, length, Lf, M, bottleneck_nn):
@@ -34,13 +35,13 @@ class VCAE(nn.Module):
         X3 = self.conv3(X)
         X4 = self.conv4(X)
         X = torch.cat((X1,X2,X3,X4), dim=1)
-        X = torch.flatten(X, start_dim=1)
+        X = F.relu(torch.flatten(X, start_dim=1))
         mean, logvar = torch.chunk(self.full1(X), chunks=2, dim=1)
         z = VCAE._reparameterizer(mean, logvar)
-        return torch.sigmoid(z), mean, logvar # bottleneck, mean and logvar
+        return z, mean, logvar # bottleneck, mean and logvar
 
     def decode(self, bottleneck):
-        X = self.full2(bottleneck)
+        X = F.sigmoid(self.full2(bottleneck))
 
         X = torch.reshape(X, self.shape)
         X1 = self.deco1(X[:,:self.M,:])
@@ -50,7 +51,7 @@ class VCAE(nn.Module):
         return X1+X2+X3+X4
 
     def loss(self, X):
-        return VAE_loss(self, X)
+        return VCAE_loss(self, X)
 
     def _reparameterizer(mean, logvar):
         eps = torch.normal(mean=0.0, std=0.1, size=(mean.shape))
