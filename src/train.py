@@ -2,17 +2,18 @@ import torch
 from torch import optim
 from torch.utils.data import DataLoader
 import time
+from hydra.experimental import compose, initialize
 
-def train(model, X_train, X_valid, iters, early_stopping_rounds=10, batch_size=32, lr=0.001, verbose=True):
+def train(model, cfg, X_train, X_valid):
     # Parameters
-    trainloader = DataLoader(X_train, batch_size=batch_size, shuffle=True)
-    validloader = DataLoader(X_valid, batch_size=batch_size)
-    optimizer = optim.Adam(model.parameters(), lr=lr)
+    trainloader = DataLoader(X_train, batch_size=cfg.batch_size, shuffle=cfg.shuffle)
+    validloader = DataLoader(X_valid, batch_size=cfg.batch_size)
+    optimizer = optim.Adam(model.parameters(), lr=cfg.lr)
     # Training loop
     tini = time.time()
     train_losses, valid_losses = [], []
     min_loss = (float("inf"),-1) # used for early stopping
-    for epoch in range(1, iters+1):
+    for epoch in range(1, cfg.iters+1):
         train_running_loss = 0
         model.train()
         for batch in trainloader:
@@ -38,9 +39,10 @@ def train(model, X_train, X_valid, iters, early_stopping_rounds=10, batch_size=3
         if valid_running_loss < min_loss[0]:
             min_loss = (valid_running_loss, epoch)
 
-        end_train = early_stopping_rounds is not None and epoch > early_stopping_rounds and epoch-min_loss[1] >= early_stopping_rounds
+        end_train = cfg.early_stopping_rounds is not None and epoch > cfg.early_stopping_rounds
+        end_train = end_train and epoch-min_loss[1] >= cfg.early_stopping_rounds
 
-        if verbose and (epoch%10 == 0 or end_train):
+        if cfg.verbose and (epoch%10 == 0 or end_train):
             print(f"EPOCH {epoch} train loss: {train_running_loss}, valid loss: {valid_running_loss}")
             print(f"epochs without improvement: {epoch-min_loss[1]}")
             print()

@@ -1,10 +1,12 @@
 import torch
 from torch import nn
+from models.base_model import BaseModel
 from models.losses import MSE_regularized
 
-class CAE(nn.Module):
-    def __init__(self, length, Lf, M, bottleneck_nn):
-        super().__init__()
+class CAE(BaseModel):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+        M, Lf, bottleneck_nn, length = self.M, self.Lf, self.bottleneck_nn, self.length
         self.conv1 = nn.Conv1d(1, M, kernel_size=Lf,)
         self.conv2 = nn.Conv1d(1, M, kernel_size=Lf, dilation=2, padding=1)
         self.conv3 = nn.Conv1d(1, M, kernel_size=Lf, dilation=4, padding=3)
@@ -16,8 +18,7 @@ class CAE(nn.Module):
         self.deco3 = nn.ConvTranspose1d(M, 1, kernel_size=Lf, dilation=4, padding=3)
         self.deco4 = nn.ConvTranspose1d(M, 1, kernel_size=Lf, dilation=8, padding=7)
 
-        self.M = M
-        self.shape = (-1,4*M,length-Lf+1)
+        self.shape = (-1,4*M, length-Lf+1)
 
     def forward(self, X, get_bottleneck=False):
         bottleneck = self.encode(X)
@@ -44,5 +45,5 @@ class CAE(nn.Module):
         X4 = self.deco4(X[:,3*self.M:,:])
         return X1+X2+X3+X4
 
-    def loss(self, X):
-        return MSE_regularized(self, X)
+    def loss(self, batch):
+        return MSE_regularized(self, batch, self.reg)
