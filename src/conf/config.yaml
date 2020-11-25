@@ -11,7 +11,10 @@ model:
   length: 64
   bottleneck_nn: 32
   reg: 0.001 # by default 0.001
-  regKL: 1
+  regKL: 0.25
+
+  hidden_nn: 20 # for the clustering
+  alpha: 0.6
 
 # TRAINING
 train:

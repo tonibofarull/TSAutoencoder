@@ -34,3 +34,35 @@ def choose_bottleneck(X_test, X_train, X_valid, length, M, Lf):
         cors = [scipy.stats.spearmanr(pred1[i,0], X_test[i,0]).correlation for i in range(X_test.shape[0])]
         vals.append(cors)
     return vals
+
+"""
+Bhattacharyya distance of normal distributions with a diagonal covariance matrix
+https://en.wikipedia.org/wiki/Bhattacharyya_distance
+"""
+def bhattacharyya_distance(mean1, var1, mean2, var2):
+    sigma = (var1+var2)/2
+    return 1/8 * np.sum((mean1-mean2)**2 * 1/sigma) + 1/2 * np.log(np.prod(sigma)/np.sqrt(np.prod(var1)*np.prod(var2)))
+
+"""
+KL divergence
+https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+"""
+def KL_divergence(mean1, var1, mean2, var2):
+    k = len(mean1)
+    return 1/2 * (np.sum(1/var2*var1) + np.sum((mean1-mean2)**2 * 1/var2) - k + np.log(np.prod(var2)/np.prod(var1)))
+
+def compute_distance_matrix(means, vars, method=0):
+    """
+    method = 0 => bhattacharyya
+    method = 1 => kl divergence symmetrized
+    """
+    func = bhattacharyya_distance
+    if method != 0:
+        func = KL_divergence
+    n = means.shape[0]
+    dm = np.zeros((n,n))
+    for i in range(n):
+        for j in range(i,n):
+            dist = func(means[i], vars[i], means[j], vars[j])
+            dm[i,j] = dm[j,i] = dist
+    return dm

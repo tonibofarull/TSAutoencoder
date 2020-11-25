@@ -22,8 +22,10 @@ class VCAE(BaseModel):
         self.M = M
         self.shape = (-1,4*M,length-Lf+1)
 
-    def forward(self, X, get_bottleneck=False, is_train=False):
+    def forward(self, X, get_distribution=False, get_bottleneck=False, is_train=False):
         z, mean, logvar = self.encode(X)
+        if get_distribution:
+            return mean, torch.exp(logvar)
         if get_bottleneck:
             return mean
         pred = self.decode(z)

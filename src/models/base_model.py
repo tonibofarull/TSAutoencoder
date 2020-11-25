@@ -10,3 +10,6 @@ class BaseModel(nn.Module):
         self.length = cfg.length
         self.reg = cfg.reg
         self.regKL = cfg.regKL
+
+        self.hidden_nn = cfg.hidden_nn
+        self.alpha = cfg.alpha

@@ -1,7 +1,10 @@
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
-from sklearn.datasets import load_digits
+
+"""
+Output must be a numpy array
+"""
 
 def sin_cos(n_images, length):
     docs = []

@@ -14,6 +14,13 @@ def MSE_regularized(model, batch, lmd):
     pred = model(batch)
     return F.mse_loss(pred,batch) + lmd*_my_l1(model)
 
+def Clus(model, batch, lmd, alpha):
+    recon, clus = model(batch, get_training=True)
+    loss_recon = F.mse_loss(recon,batch[:,:,:-1])
+    real_class = torch.flatten(batch[:,:,-1]).long()
+    loss_clust = F.cross_entropy(clus, real_class)
+    return (1-alpha)*loss_recon + alpha*loss_clust + lmd*_my_l1(model)
+
 # UTILS
 
 def _my_l2(model):
