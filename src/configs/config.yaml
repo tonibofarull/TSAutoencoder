@@ -13,7 +13,7 @@ model:
   reg: 0.001 # by default 0.001
   regKL: 0.25
 
-  hidden_nn: 20 # for the clustering
+  hidden_nn: 15 # for the clustering
   alpha: 0.6
 
 # TRAINING
