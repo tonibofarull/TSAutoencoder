@@ -11,7 +11,7 @@ class CAE(BaseModel):
         hidden_nn = self.hidden_nn
         self.deep_cluster = False
         num_classes = 3
-        self.dilation = [2,3,5,7]
+        self.dilation = [1,2,4,8]
 
         self.conv = [nn.Conv1d(1, M, kernel_size=Lf, dilation=d, padding=d-1) for d in self.dilation]
         self.full1 = nn.Linear(4*M*(length-Lf+1), bottleneck_nn)

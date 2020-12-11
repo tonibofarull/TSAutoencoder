@@ -4,14 +4,12 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import scipy
-from sklearn.cluster import AgglomerativeClustering, KMeans
-from sklearn.metrics import calinski_harabasz_score, confusion_matrix
+from sklearn.metrics import confusion_matrix
 
 from models.CAE import CAE
 from models.VCAE import VCAE
 from generate import sin_cos, arma, wind
 from train import train
-from utils import latent_space, choose_bottleneck, compute_distance_matrix
 
 import hydra
 from hydra.experimental import initialize, compose
@@ -53,7 +51,8 @@ def generate_data():
 
 def execution(X_train, X_test, X_valid, params):
     # HYPERPARAMETER SETTING
-    cfg_model.alpha = float(params[0])
+    # cfg_model.alpha = float(params[0])
+    cfg_model.reg = float(params[0])
     # cfg_model.hidden_nn = params[1]
     # END
 
@@ -70,25 +69,39 @@ def execution(X_train, X_test, X_valid, params):
     pred = torch.argmax(probs, dim=1).detach().numpy()
     real = X_test[:,:,-1].flatten().long().detach().numpy()
     cm = confusion_matrix(real, pred)
-    acc = np.sum(np.diag(cm))/X_test.shape[0]
+    acc = np.sum(np.diag(cm))/np.sum(cm)
 
     print("Correlation, avg and std:", np.mean(cors), np.std(cors))
     print("Accuracy:", acc)
 
+
+    num_filter = len(model.dilation)*cfg_model.M
+    w_per_filter = cfg_model.length-cfg_model.Lf+1 # weights per filter
+    num_neurons = cfg_model.bottleneck_nn
+    M = cfg_model.M 
+
+    w = np.array([[torch.mean(torch.abs(model.full1.weight[j,i*w_per_filter:(i+1)*w_per_filter])).item() for i in range(num_filter)] for j in range(num_neurons)])
+
+    x_axis_labels = [f"{i}-d:{model.dilation[i//M]}" for i in range(w.shape[1])] # number of filter - d:dilatation
+    sns.heatmap(w, cmap="coolwarm", xticklabels=x_axis_labels) # y-axis => neuron of the bottleneck, x-axis => each position is one filter ordered by dilatation
+    plt.savefig(f"{cfg_model.reg}.png")
+    plt.close()
+
     return acc, np.mean(cors)
 
 # HYPERPARAMETERS
-alphas = np.linspace(0,1,20)
+# alphas = np.linspace(0,1,20)
 # alphas = [0.45, 0.5, 0.55, 0.6, 0.65, 0.7]
-neurons = list(range(10,40,5))
+# neurons = list(range(10,40,5))
+reg = [0.001, 0.002, 0.003, 0.004]
 
-params = [alphas]
+params = [reg]
 # alphas = np.linspace(0.4,0.6,5)
 print(params)
 # CONFIG
-K = 5
-cfg_train.early_stopping_rounds = 10
-cfg_dataset.n_train, cfg_dataset.n_valid, cfg_dataset.n_test = 300, 100, 100
+K = 1
+# cfg_train.early_stopping_rounds = 10
+# cfg_dataset.n_train, cfg_dataset.n_valid, cfg_dataset.n_test = 300, 100, 100
 # cfg_train.iters = 1
 # END
 
@@ -124,10 +137,12 @@ print(kcors)
 # ONE VARIABLE
 
 if len(params) == 1:
-    plt.plot(alphas, cors_mean, "o-", label="Correlation")
-    plt.fill_between(alphas, cors_mean-cors_std, cors_mean+cors_std, alpha=0.1)
-    plt.plot(alphas, accs_mean, "o-", label="Accuracy")
-    plt.fill_between(alphas, accs_mean-accs_std, accs_mean+accs_std, alpha=0.1)
+    par1 = params[0]
+
+    plt.plot(params[0], cors_mean, "o-", label="Correlation")
+    plt.fill_between(params[0], cors_mean-cors_std, cors_mean+cors_std, alpha=0.1)
+    plt.plot(params[0], accs_mean, "o-", label="Accuracy")
+    plt.fill_between(params[0], accs_mean-accs_std, accs_mean+accs_std, alpha=0.1)
     plt.legend()
     plt.xlabel("alpha")
     plt.show()
@@ -135,19 +150,22 @@ if len(params) == 1:
 # TWO VARIABLES
 
 elif len(params) == 2:
-    for i in range(len(alphas)):
-        plt.plot(neurons, np.mean(kcors, axis=0)[i], "o-", label=f"alpha={alphas[i]}")
-        plt.fill_between(neurons, cors_mean[i] - cors_std[i],
-                                  cors_mean[i] + cors_std[i], alpha=0.1)
+    par1 = params[0]
+    par2 = params[1]
+
+    for i in range(len(par1)):
+        plt.plot(par2, np.mean(kcors, axis=0)[i], "o-", label=f"alpha={par1[i]}")
+        plt.fill_between(par2, cors_mean[i] - cors_std[i],
+                               cors_mean[i] + cors_std[i], alpha=0.1)
     plt.legend()
     plt.xlabel("Number of neurons in the hidden layer")
     plt.ylabel("Correlation")
     plt.show()
 
-    for i in range(len(alphas)):
-        plt.plot(neurons, np.mean(kaccs, axis=0)[i], "s-", label=f"alpha={alphas[i]}")
-        plt.fill_between(neurons, accs_mean[i] - accs_std[i],
-                                  accs_mean[i] + accs_std[i], alpha=0.1)
+    for i in range(len(par1)):
+        plt.plot(par2, np.mean(kaccs, axis=0)[i], "s-", label=f"alpha={par1[i]}")
+        plt.fill_between(par2, accs_mean[i] - accs_std[i],
+                               accs_mean[i] + accs_std[i], alpha=0.1)
     plt.legend()
     plt.xlabel("Number of neurons in the hidden layer")
     plt.ylabel("Accuracy")
