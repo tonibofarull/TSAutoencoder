@@ -1,25 +1,30 @@
 import torch
+from torch import nn
 import torch.nn.functional as F
 
-def VCAE_loss(model, batch, lmd, regKL):
-    pred, mean, logvar = model(batch, is_train=True)
 
-    recon = F.mse_loss(pred,batch) # or binary_cross_entropy when [0,1]
-    KL = 0.5 * torch.mean(torch.sum(torch.exp(logvar) + torch.square(mean) - 1.0 - logvar, dim=0))
-    # KL(p(x|z) || N(0,I))
+class CAELoss(nn.Module):
+    def __init__(self, alpha, lmd):
+        super().__init__()
+        self.alpha = alpha
+        self.lmd = lmd
 
-    return recon + regKL*KL + lmd*_my_l1(model)
+    def forward(self, model, pred_X, X, pred_clss, clss, pred_dil):
+        loss_recon = F.mse_loss(pred_X, X)
+        loss_class = F.cross_entropy(pred_clss, clss)
+        loss_reg = _my_l2(model)
+        loss = (1-self.alpha)*loss_recon + self.alpha*loss_class + self.lmd*loss_reg
 
-def MSE_regularized(model, batch, lmd):
-    pred = model(batch)
-    return F.mse_loss(pred,batch) + lmd*_my_l1(model)
+        # full1 has dimension (bottleneck_nn, k*M*length)
+        penalize_wrongdil = 0
+        for i in range(model.k):
+            weight_per_dil = (model.length-model.Lf+1)*model.M
+            di = torch.sum(torch.abs(model.full1.weight[:,i*weight_per_dil:(i+1)*weight_per_dil]))
+            penalize_wrongdil += torch.mean(pred_dil[:,i]*di)
 
-def Clus(model, batch, lmd, alpha):
-    recon, clus = model(batch, get_training=True)
-    loss_recon = F.mse_loss(recon,batch[:,:,:-1])
-    real_class = torch.flatten(batch[:,:,-1]).long()
-    loss_clust = F.cross_entropy(clus, real_class)
-    return (1-alpha)*loss_recon + alpha*loss_clust + lmd*_my_l1(model)
+        loss += self.lmd/10*penalize_wrongdil
+
+        return loss
 
 # UTILS
 

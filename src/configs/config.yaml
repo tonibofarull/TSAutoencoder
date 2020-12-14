@@ -10,10 +10,8 @@ model:
   Lf: 3 # size of the filters
   length: 64
   bottleneck_nn: 32
-  reg: 0.001 # by default 0.001
-  regKL: 0.25
 
-  hidden_nn: 15 # for the clustering
+  lmd: 0.001
   alpha: 0.6
 
 # TRAINING
