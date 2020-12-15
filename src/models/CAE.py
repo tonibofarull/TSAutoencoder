@@ -5,7 +5,7 @@ from models.losses import CAELoss
 
 class CAE(nn.Module):
     def __init__(self, cfg,
-        dilation = [2, 11, 3, 5],
+        dilation = [2, 3, 5, 7],
         num_classes = 3
     ):
         super().__init__()
@@ -22,10 +22,11 @@ class CAE(nn.Module):
 
         # LAYER DEFINITION
 
-        self.conv = [nn.Conv1d(1, M, kernel_size=Lf, dilation=d, padding=d*(Lf-1)//2) for d in dilation]
+        # By using ModuleList we the layers of the list are properly registered
+        self.conv = nn.ModuleList([nn.Conv1d(1, M, kernel_size=Lf, dilation=d, padding=d*(Lf-1)//2) for d in dilation])
         self.full1 = nn.Linear(k*M*length, bottleneck_nn)
         self.full2 = nn.Linear(bottleneck_nn, k*M*length)
-        self.deco = [nn.ConvTranspose1d(M, 1, kernel_size=Lf, dilation=d, padding=d*(Lf-1)//2) for d in dilation]
+        self.deco = nn.ModuleList([nn.ConvTranspose1d(M, 1, kernel_size=Lf, dilation=d, padding=d*(Lf-1)//2) for d in dilation])
 
         self.full3 = nn.Linear(bottleneck_nn, num_classes)
 

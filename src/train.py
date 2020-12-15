@@ -2,15 +2,20 @@ import torch
 from torch.utils.data import DataLoader
 from torch import optim
 import time
+from copy import deepcopy
 
 class Trainer():
-    def __init__(self, cfg):
+    def __init__(self, cfg,
+        restore_best_weights = False
+    ):
         self.lr = cfg.lr
         self.early_stopping_rounds = cfg.early_stopping_rounds
         self.iters = cfg.iters
         self.batch_size = cfg.batch_size
         self.shuffle = cfg.shuffle
         self.verbose = cfg.verbose
+
+        self.restore_best_weights = restore_best_weights
 
     def fit(self, model, X_train, X_valid):
         # Datasets and optimizer
@@ -20,7 +25,13 @@ class Trainer():
         # Training loop
         tini = time.time()
         train_losses, valid_losses = [], []
-        min_loss = (float("inf"),-1) # used for early stopping
+        early_stop = {
+            'rounds': self.early_stopping_rounds,
+            'best_cost': float('inf'),
+            'best_round': None,
+            'best_model': None
+        }
+        
         for epoch in range(1, self.iters+1):
             train_running_loss = 0
             model.train()
@@ -44,19 +55,27 @@ class Trainer():
             train_losses.append(train_running_loss)
             valid_losses.append(valid_running_loss)
 
-            if valid_running_loss < min_loss[0]:
-                min_loss = (valid_running_loss, epoch)
+            if valid_running_loss < early_stop['best_cost']:
+                early_stop['best_cost'] = valid_running_loss
+                early_stop['best_round'] = epoch
+                if self.restore_best_weights:
+                    early_stop['best_model'] = deepcopy(model.state_dict()) # we must do a deep copy
 
-            end_train = self.early_stopping_rounds is not None and epoch > self.early_stopping_rounds
-            end_train = end_train and epoch-min_loss[1] >= self.early_stopping_rounds
+            end_train = early_stop['rounds'] is not None and epoch > early_stop['rounds']
+            end_train = end_train and epoch-early_stop['best_round'] >= early_stop['rounds']
 
             if self.verbose and (epoch%10 == 0 or end_train):
                 print(f"EPOCH {epoch} train loss: {train_running_loss}, valid loss: {valid_running_loss}")
-                print(f"epochs without improvement: {epoch-min_loss[1]}")
+                print(f"epochs without improvement: {epoch-early_stop['best_round']}")
                 print()
 
             if end_train:
                 break
 
+        # Final update of the model
+
+        if self.restore_best_weights:
+            model.load_state_dict(early_stop['best_model'])
+
         print(f"Training Finished in {(time.time()-tini)}s")
-        return train_losses, valid_losses
+        return train_losses, valid_losses, early_stop['best_model']

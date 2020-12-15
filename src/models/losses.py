@@ -17,11 +17,10 @@ class CAELoss(nn.Module):
 
         # full1 has dimension (bottleneck_nn, k*M*length)
         penalize_wrongdil = 0
+        weight_per_dil = model.length*model.M
         for i in range(model.k):
-            weight_per_dil = (model.length-model.Lf+1)*model.M
             di = torch.sum(torch.abs(model.full1.weight[:,i*weight_per_dil:(i+1)*weight_per_dil]))
             penalize_wrongdil += torch.mean(pred_dil[:,i]*di)
-
         loss += self.lmd/10*penalize_wrongdil
 
         return loss
