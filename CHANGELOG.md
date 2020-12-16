@@ -1,5 +1,11 @@
 # Changelog
 
+## [v1.1.1] - 2020-12-16
+
+### Changed
+
+- The dilated convolutions produce outputs with the same length as the input
+
 ## [v1.1] - 2020-12-11
 
 Change of the loss function that allows to choose between reconstruction and classification.
