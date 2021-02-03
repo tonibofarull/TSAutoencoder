@@ -78,4 +78,4 @@ class Trainer():
             model.load_state_dict(early_stop['best_model'])
 
         print(f"Training Finished in {(time.time()-tini)}s")
-        return train_losses, valid_losses, early_stop['best_model']
+        return train_losses, valid_losses

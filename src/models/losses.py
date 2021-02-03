@@ -9,20 +9,16 @@ class CAELoss(nn.Module):
         self.alpha = alpha
         self.lmd = lmd
 
-    def forward(self, model, pred_X, X, pred_clss, clss, pred_dil):
-        loss_recon = F.mse_loss(pred_X, X)
+    def forward(self, model, pred_X, X, pred_clss, clss):
+        # Classification:
         loss_class = F.cross_entropy(pred_clss, clss)
-        loss_reg = _my_l1(model)
-        loss = (1-self.alpha)*loss_recon + self.alpha*loss_class + self.lmd*loss_reg
+        # Reconstruction:
+        # loss_recon = F.mse_loss(pred_X, X)
+        loss_recon = F.binary_cross_entropy(pred_X, X) # if output [0,1]
+        # Regularization:
+        loss_reg = _my_l2(model)
 
-        # Automatic penalization of the dilation: full1 has dimension (bottleneck_nn, k*M*length)
-        # penalize_wrongdil = 0
-        # weight_per_dil = model.length*model.M
-        # for i in range(model.k):
-        #     di = torch.sum(torch.abs(model.full1.weight[:,i*weight_per_dil:(i+1)*weight_per_dil]))
-        #     penalize_wrongdil += torch.mean(pred_dil[:,i]*di)
-        # loss += self.lmd/10*penalize_wrongdil
-
+        loss = self.alpha*loss_class + (1-self.alpha)*loss_recon + self.lmd*loss_reg
         return loss
 
 # UTILS
