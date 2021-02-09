@@ -9,14 +9,14 @@ class CAE(nn.Module):
         num_classes = 3
     ):
         super().__init__()
-        self.k = len(dilation)
-        self.M = cfg.M
+        self.k = len(dilation) # Number of dilations
+        self.M = cfg.M # Number of filters per dilation
         self.Lf = cfg.Lf
         self.bottleneck_nn = cfg.bottleneck_nn
         self.length = cfg.length
         self.dilation = dilation
         self.num_classes = num_classes
-        self.lossf = CAELoss(lmd=cfg.lmd, alpha=cfg.alpha)
+        self.lossf = CAELoss(alpha=cfg.alpha, lmd=cfg.lmd)
 
         k, M, Lf, bottleneck_nn, length = self.k, self.M, self.Lf, self.bottleneck_nn, self.length
 

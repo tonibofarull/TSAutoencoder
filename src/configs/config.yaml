@@ -18,7 +18,7 @@ model:
 train:
   verbose: True # print information of the training
 
-  batch_size: 64 # of training and validation, default: 32
+  batch_size: 128 # of training and validation, default: 32
   shuffle: True # shuffle training data after each epoch
 
   iters: 3000
