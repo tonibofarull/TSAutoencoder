@@ -50,8 +50,7 @@ def tuning(alpha, n_trial):
     data_train_ori, data_valid_ori, _ = ElectricDevices()
     data_train, data_valid = normalize(data_train_ori), normalize(data_valid_ori)
 
-    study = optuna.load_study(study_name="exp1", storage="sqlite:///exp1.db",
-                              sampler=optuna.samplers.TPESampler(seed=1))
+    study = optuna.load_study(study_name="exp1", storage="sqlite:///exp1.db")
     study.optimize(lambda trial : objective(trial, data_train, data_valid, cfg), n_trials=n_trial)
 
     return study
@@ -91,8 +90,8 @@ def acc_cor(alpha, hp):
     return acc, cor
 
 def main(
-    alphas=[float(f) for f in np.linspace(0, 1, 2)],
-    n_trial_per_job=8,
+    alphas=[float(f) for f in np.linspace(0, 1, 20)],
+    n_trial_per_job=4,
     n_jobs=8
 ):
     hyper_param = []
