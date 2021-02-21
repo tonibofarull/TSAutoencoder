@@ -21,6 +21,6 @@ train:
   batch_size: 128 # of training and validation, default: 32
   shuffle: True # shuffle training data after each epoch
 
-  iters: 1 # 3000
+  iters: 500 # 500
   early_stopping_rounds: 30
   lr: 0.001

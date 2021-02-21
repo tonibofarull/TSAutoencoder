@@ -17,6 +17,7 @@ torch.manual_seed(1)
 np.random.seed(1)
 import matplotlib.pyplot as plt
 import pickle
+from joblib import Parallel, delayed
 
 def objective(trial, data_train, data_valid, cfg):
     cfg_dataset, cfg_model, cfg_train = cfg.dataset, cfg.model, cfg.train
@@ -49,10 +50,10 @@ def tuning(alpha, n_trial):
     data_train_ori, data_valid_ori, _ = ElectricDevices()
     data_train, data_valid = normalize(data_train_ori), normalize(data_valid_ori)
 
-    study = optuna.create_study(direction="minimize", sampler=optuna.samplers.TPESampler(seed=1))
-    study.optimize(lambda trial : objective(trial, data_train, data_valid, cfg), n_trials=n_trial, n_jobs=4)
+    study = optuna.load_study(study_name="exp1", storage="sqlite:///exp1.db",
+                              sampler=optuna.samplers.TPESampler(seed=1))
+    study.optimize(lambda trial : objective(trial, data_train, data_valid, cfg), n_trials=n_trial)
 
-    print(f"alpha: {alpha}, Best value: {study.best_value}, Best params: {study.best_params}")
     return study
 
 def acc_cor(alpha, hp):
@@ -90,21 +91,31 @@ def acc_cor(alpha, hp):
     return acc, cor
 
 def main(
-    alphas=np.linspace(0, 1, 3),
-    n_trial=1
+    alphas=[float(f) for f in np.linspace(0, 1, 2)],
+    n_trial_per_job=8,
+    n_jobs=8
 ):
     hyper_param = []
     for alpha in alphas:
-        alpha = float(alpha)
-        hyper_param.append(tuning(alpha, n_trial=n_trial))
-    
+        try:
+            optuna.delete_study(study_name="exp1", storage="sqlite:///exp1.db")
+        except:
+            pass
+        optuna.create_study(study_name="exp1", storage="sqlite:///exp1.db")
+        with Parallel(n_jobs=n_jobs) as parallel:
+            parallel(delayed(tuning)(alpha, n_trial=n_trial_per_job) for _ in range(n_jobs))
+        res = optuna.load_study(study_name="exp1", storage="sqlite:///exp1.db")
+
+        print(f"alpha: {alpha}, Best value: {res.best_value}, Best params: {res.best_params}")
+
+        hyper_param.append(res.best_params)
+
     with open("hyper_param.pickle", "wb") as f:
         pickle.dump(hyper_param, f)
 
     accs, cors = [], []
     for hp, alpha in zip(hyper_param, alphas):
-        alpha = float(alpha)
-        acc, cor = acc_cor(alpha, hp.best_params)
+        acc, cor = acc_cor(alpha, hp)
         accs.append(acc)
         cors.append(cor)
 
