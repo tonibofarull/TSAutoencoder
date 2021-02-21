@@ -1,91 +1,118 @@
 import torch
-import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
-import seaborn as sns
-import scipy
-from sklearn.metrics import confusion_matrix
 
 from models.CAE import CAE
-from generate import arma
 from train import Trainer
 
 import hydra
 from hydra.experimental import initialize, compose
-import itertools
+from dataloader import ElectricDevices, normalize
+
+from sklearn.metrics import confusion_matrix
+import dcor
 
 import optuna
 
 torch.manual_seed(1)
 np.random.seed(1)
+import matplotlib.pyplot as plt
+import pickle
 
-with initialize(config_path="configs"):
-    cfg = compose(config_name="config")
-
-cfg_dataset, cfg_model, cfg_train = cfg.dataset, cfg.model, cfg.train
-
-def generate_data():
-    n_train, n_valid, n_test = cfg_dataset.n_train, cfg_dataset.n_valid, cfg_dataset.n_test
-    length = cfg_model.length # each observation is a vector of size (1,length)
-
-    n = n_train+n_valid+n_test
-
-    X1 = arma(n//3, length, ar=[0, -0.5] , ma=[0, 0.1])
-    X2 = arma(n//3, length, ar=[0, 0, 0.7] , ma=[0, 0, 0.05])
-    X3 = arma(n//3, length, ar=[0, 0, 0, 0, -0.6] , ma=[0, 0, 0, 0, 0.2])
-    class1 = np.array([0]*(n//3), dtype=np.float32).reshape(n//3, 1, 1)
-    class2 = np.array([1]*(n//3), dtype=np.float32).reshape(n//3, 1, 1)
-    class3 = np.array([2]*(n//3), dtype=np.float32).reshape(n//3, 1, 1)
-    X1 = np.append(X1, class1, 2)
-    X2 = np.append(X2, class2, 2)
-    X3 = np.append(X3, class3, 2)
-
-    X = np.r_[X1,X2,X3]
-
-    idx = list(range(len(X)))
-    np.random.shuffle(idx)
-    X = X[idx]
-    X = torch.from_numpy(X)
-
-    X_train, X_valid, X_test = X[:n_train], X[n_train:n_train+n_valid], X[n_train+n_valid:]
-    return X_train, X_valid, X_test
-
-def objective(trial):
+def objective(trial, data_train, data_valid, cfg):
+    cfg_dataset, cfg_model, cfg_train = cfg.dataset, cfg.model, cfg.train
+    
     # HYPERPARAMETER SETTING
-    # cfg_model.alpha = float(params[0])
-    # cfg_model.lmd = trial.suggest_float("lmd", 1e-4, 1e-1, log=True)
-    cfg_train.early_stopping_rounds = trial.suggest_int("early_stopping_rounds", 10, 40)
-    cfg_train.verbose=False
-    # cfg_train.iters = 1
-    # cfg_model.hidden_nn = params[1]
+    cfg_model.lmd = trial.suggest_loguniform("lmd", 1e-8, 1e-3)
+    cfg_train.early_stopping_rounds = trial.suggest_int("early_stopping_rounds", 5, 30)
+    cfg_train.lr = trial.suggest_loguniform("lr", 1e-6, 1e-1)
     # END
 
-    model = CAE(cfg_model)
+    n_valid = data_valid.shape[0]
+    data_valid1 = data_valid[:n_valid//2]
+    data_valid2 = data_valid[n_valid//2:]
 
+    model = CAE(cfg_model, num_classes=7)
     trainer = Trainer(cfg_train)
-    train_losses, valid_losses = trainer.fit(model, X_train, X_valid)
+    trainer.fit(model, data_train, data_valid1)
 
-    inp, real = X_test[:,:,:-1], X_test[:,:,-1]
-    pred, output = model(inp, get_training=True)
-    pred = pred.detach().numpy()
+    loss = model.loss(data_valid2, do_reg=False)
 
-    cors = [scipy.stats.spearmanr(pred[i,0], inp[i,0]).correlation for i in range(inp.shape[0])]
-    cor = np.mean(cors)
+    return loss
 
-    probs = torch.nn.functional.softmax(output, dim=1)
-    pred = torch.argmax(probs, dim=1).detach().numpy()
-    cm = confusion_matrix(real, pred)
+def tuning(alpha, n_trial):
+
+    with initialize(config_path="configs"):
+        cfg = compose(config_name="config")
+
+    cfg.model.alpha = alpha
+
+    data_train_ori, data_valid_ori, _ = ElectricDevices()
+    data_train, data_valid = normalize(data_train_ori), normalize(data_valid_ori)
+
+    study = optuna.create_study(direction="minimize", sampler=optuna.samplers.TPESampler(seed=1))
+    study.optimize(lambda trial : objective(trial, data_train, data_valid, cfg), n_trials=n_trial, n_jobs=4)
+
+    print(f"alpha: {alpha}, Best value: {study.best_value}, Best params: {study.best_params}")
+    return study
+
+def acc_cor(alpha, hp):
+
+    with initialize(config_path="configs"):
+        cfg = compose(config_name="config")
+
+    cfg_dataset, cfg_model, cfg_train = cfg.dataset, cfg.model, cfg.train
+
+    cfg_model.alpha = alpha
+    cfg_model.lmd = hp["lmd"]
+    cfg_train.early_stopping_rounds = hp["early_stopping_rounds"]
+    cfg_train.lr = hp["lr"]
+    print("Acc and Cor with: alpha =",alpha, hp)
+
+    data_train_ori, data_valid_ori, data_test_ori = ElectricDevices()
+    data_train, data_valid, data_test = normalize(data_train_ori), normalize(data_valid_ori), normalize(data_test_ori)
+    X_test, y_test = data_test[:,:,:-1], data_test[:,:,-1]
+
+    model = CAE(cfg_model, num_classes=7)
+    trainer = Trainer(cfg_train)
+    trainer.fit(model, data_train, data_valid)
+
+    X_test, y_test = data_test[:,:,:-1], data_test[:,:,-1].numpy()
+    X_testp, outclass_testp, bn = model(X_test)
+    X_testp = X_testp.detach().numpy()
+    probs_testp = torch.nn.functional.softmax(outclass_testp, dim=1)
+    y_testp = torch.argmax(probs_testp, dim=1).detach().numpy()
+
+    cor = np.mean(dcor.rowwise(dcor.distance_correlation, X_testp[:,0], X_test[:,0].detach().numpy()))
+
+    cm = confusion_matrix(y_test, y_testp)
     acc = np.sum(np.diag(cm))/np.sum(cm)
 
-    return acc
+    return acc, cor
 
-X_train, X_valid, X_test = generate_data()
+def main(
+    alphas=np.linspace(0, 1, 3),
+    n_trial=1
+):
+    hyper_param = []
+    for alpha in alphas:
+        alpha = float(alpha)
+        hyper_param.append(tuning(alpha, n_trial=n_trial))
+    
+    with open("hyper_param.pickle", "wb") as f:
+        pickle.dump(hyper_param, f)
 
-search_space = {"early_stopping_rounds": [10, 20, 30, 40]}
-sampler = optuna.samplers.GridSampler(search_space)
-study = optuna.create_study(direction="maximize", sampler=sampler)
-study.optimize(objective, n_trials=10)
+    accs, cors = [], []
+    for hp, alpha in zip(hyper_param, alphas):
+        alpha = float(alpha)
+        acc, cor = acc_cor(alpha, hp.best_params)
+        accs.append(acc)
+        cors.append(cor)
 
-print("Best trial:")
-print(study.best_params)
-optuna.visualization.plot_contour(study, params=["early_stopping_rounds"]).show()
+    plt.plot(alphas, cors, "o-", label="Correlation")
+    plt.plot(alphas, accs, "o-", label="Accuracy")
+    plt.legend()
+    plt.xlabel("alpha")
+    plt.savefig("alpha-cor_acc.png")
+
+if __name__ == "__main__":
+    main()

@@ -1,17 +1,19 @@
 import numpy as np
 import torch
 import pandas as pd
+import torch
 
 """
 Output must be a numpy array
 """
 
 def normalize(X):
+    X = torch.clone(X)
     M, _ = torch.max(X[:,:,:-1], dim=2, keepdim=True)
     m, _ = torch.min(X[:,:,:-1], dim=2, keepdim=True)
     X[:,:,:-1] = (X[:,:,:-1]-m)/(M-m)
-    #X[:,:,:-1] = (X[:,:,:-1]-mean)/std
     return X
+    
 
 def ElectricDevices():
     df = pd.read_csv("../data/ElectricDevices/ElectricDevices_TRAIN.txt", sep="  ", header=None, engine="python")

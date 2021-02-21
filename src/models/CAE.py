@@ -70,11 +70,11 @@ class CAE(nn.Module):
         X = self.full_bn_class2(X)
         return X
 
-    def loss(self, batch):
+    def loss(self, batch, do_reg=True):
         X, clss = self.split_data(batch)
         clss = torch.flatten(clss).long()
         pred_X, pred_class, _ = self(X)
-        return self.lossf(self, pred_X, X, pred_class, clss)
+        return self.lossf(self, pred_X, X, pred_class, clss, do_reg)
 
     # UTILS
 

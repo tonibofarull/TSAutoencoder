@@ -10,7 +10,7 @@ class CAELoss(nn.Module):
         self.alpha = alpha
         self.lmd = lmd
 
-    def forward(self, model, pred_X, X, pred_clss, clss):
+    def forward(self, model, pred_X, X, pred_clss, clss, do_reg=True):
         # Classification:
         loss_class = F.cross_entropy(pred_clss, clss)
         # Reconstruction:
@@ -22,9 +22,11 @@ class CAELoss(nn.Module):
         # - Filters:
         loss_col = _my_group_col(model)
         # - Neurons:
-        #loss_row = _my_group_row(model)
+        loss_row = _my_group_row(model)
 
-        loss = self.alpha*loss_class + (1-self.alpha)*loss_recon + self.lmd*(loss_reg + loss_col)
+        loss = self.alpha*loss_class + (1-self.alpha)*loss_recon
+        if do_reg:
+            loss += self.lmd*(loss_reg + loss_col + loss_row)
         return loss
 
 # UTILS

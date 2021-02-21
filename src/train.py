@@ -77,5 +77,6 @@ class Trainer():
         if self.restore_best_weights:
             model.load_state_dict(early_stop['best_model'])
 
-        print(f"Training Finished in {(time.time()-tini)}s")
+        if self.verbose:
+            print(f"Training Finished in {(time.time()-tini)}s")
         return train_losses, valid_losses

@@ -11,16 +11,16 @@ model:
   length: 96
   bottleneck_nn: 24
 
-  lmd: 0.00001
+  lmd: 0.00001 #1.2164941464151834e-06 #0.00001
   alpha: 0.1
 
 # TRAINING
 train:
-  verbose: True # print information of the training
+  verbose: False # print information of the training
 
   batch_size: 128 # of training and validation, default: 32
   shuffle: True # shuffle training data after each epoch
 
-  iters: 3000
+  iters: 1 # 3000
   early_stopping_rounds: 30
   lr: 0.001
