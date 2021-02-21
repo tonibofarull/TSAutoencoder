@@ -40,7 +40,7 @@ def objective(trial, data_train, data_valid, cfg):
 
     return loss
 
-def tuning(alpha, n_trial):
+def tuning(alpha, n_trial, study_name):
 
     with initialize(config_path="configs"):
         cfg = compose(config_name="config")
@@ -50,7 +50,7 @@ def tuning(alpha, n_trial):
     data_train_ori, data_valid_ori, _ = ElectricDevices()
     data_train, data_valid = normalize(data_train_ori), normalize(data_valid_ori)
 
-    study = optuna.load_study(study_name="exp1", storage="sqlite:///exp1.db")
+    study = optuna.load_study(study_name=study_name, storage="sqlite:///storage.db")
     study.optimize(lambda trial : objective(trial, data_train, data_valid, cfg), n_trials=n_trial)
 
     return study
@@ -66,7 +66,7 @@ def acc_cor(alpha, hp):
     cfg_model.lmd = hp["lmd"]
     cfg_train.early_stopping_rounds = hp["early_stopping_rounds"]
     cfg_train.lr = hp["lr"]
-    print("Acc and Cor with: alpha =",alpha, hp)
+    print("Acc and Cor with: alpha =", alpha, hp)
 
     data_train_ori, data_valid_ori, data_test_ori = ElectricDevices()
     data_train, data_valid, data_test = normalize(data_train_ori), normalize(data_valid_ori), normalize(data_test_ori)
@@ -95,26 +95,28 @@ def main(
     n_jobs=8
 ):
     hyper_param = []
-    for alpha in alphas:
+    for exp, alpha in enumerate(alphas):
+        study_name = f"exp-{exp}"
+
         try:
-            optuna.delete_study(study_name="exp1", storage="sqlite:///exp1.db")
+            optuna.delete_study(study_name=study_name, storage="sqlite:///storage.db")
         except:
             pass
-        optuna.create_study(study_name="exp1", storage="sqlite:///exp1.db")
+        optuna.create_study(study_name=study_name, storage="sqlite:///storage.db")
         with Parallel(n_jobs=n_jobs) as parallel:
-            parallel(delayed(tuning)(alpha, n_trial=n_trial_per_job) for _ in range(n_jobs))
-        res = optuna.load_study(study_name="exp1", storage="sqlite:///exp1.db")
+            parallel(delayed(tuning)(alpha, n_trial_per_job, study_name) for _ in range(n_jobs))
+        res = optuna.load_study(study_name=study_name, storage="sqlite:///storage.db")
 
         print(f"alpha: {alpha}, Best value: {res.best_value}, Best params: {res.best_params}")
+        print()
+        print()
 
-        hyper_param.append(res.best_params)
-
-    with open("hyper_param.pickle", "wb") as f:
-        pickle.dump(hyper_param, f)
+        hyper_param.append(res)
 
     accs, cors = [], []
+
     for hp, alpha in zip(hyper_param, alphas):
-        acc, cor = acc_cor(alpha, hp)
+        acc, cor = acc_cor(alpha, hp.best_params)
         accs.append(acc)
         cors.append(cor)
 
