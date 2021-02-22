@@ -19,6 +19,9 @@ import matplotlib.pyplot as plt
 import pickle
 from joblib import Parallel, delayed
 
+# storage = "mysql://tbofarull:111@localhost/autoencoder"
+storage = "mysql://autoencoder:iWtc7pUcyJS5WAjR@mysql-rdlab.lsi.upc.edu/autoencoder"
+
 def objective(trial, data_train, data_valid, cfg):
     cfg_dataset, cfg_model, cfg_train = cfg.dataset, cfg.model, cfg.train
     
@@ -50,7 +53,7 @@ def tuning(alpha, n_trial, study_name):
     data_train_ori, data_valid_ori, _ = ElectricDevices()
     data_train, data_valid = normalize(data_train_ori), normalize(data_valid_ori)
 
-    study = optuna.load_study(study_name=study_name, storage="sqlite:///storage.db")
+    study = optuna.load_study(study_name=study_name, storage=storage)
     study.optimize(lambda trial : objective(trial, data_train, data_valid, cfg), n_trials=n_trial)
 
     return study
@@ -91,7 +94,7 @@ def acc_cor(alpha, hp):
 
 def main(
     alphas=[float(f) for f in np.linspace(0, 1, 20)],
-    n_trial_per_job=4,
+    n_trial_per_job=2,
     n_jobs=8
 ):
     hyper_param = []
@@ -99,13 +102,16 @@ def main(
         study_name = f"exp-{exp}"
 
         try:
-            optuna.delete_study(study_name=study_name, storage="sqlite:///storage.db")
+            optuna.delete_study(study_name=study_name, storage=storage)
         except:
             pass
-        optuna.create_study(study_name=study_name, storage="sqlite:///storage.db")
-        with Parallel(n_jobs=n_jobs) as parallel:
+            
+        optuna.create_study(study_name=study_name, storage=storage)
+        
+        with Parallel(n_jobs=-1, prefer="processes") as parallel:
             parallel(delayed(tuning)(alpha, n_trial_per_job, study_name) for _ in range(n_jobs))
-        res = optuna.load_study(study_name=study_name, storage="sqlite:///storage.db")
+
+        res = optuna.load_study(study_name=study_name, storage=storage)
 
         print(f"alpha: {alpha}, Best value: {res.best_value}, Best params: {res.best_params}")
         print()
