@@ -1,9 +1,3 @@
-# DATASET
-dataset:
-  n_train: 1000
-  n_valid: 100
-  n_test:  100
-
 # MODEL
 model:
   M: 4 # number of filters per conv
@@ -11,16 +5,15 @@ model:
   length: 96
   bottleneck_nn: 24
 
-  lmd: 0.00001 #1.2164941464151834e-06 #0.00001
-  alpha: 0.1
+  lmd: 1.0979131326372968e-05
+  alpha: 0.05
 
 # TRAINING
 train:
-  verbose: False # print information of the training
-
-  batch_size: 128 # of training and validation, default: 32
+  verbose: True # print information of the training
   shuffle: True # shuffle training data after each epoch
-
-  iters: 500 # 500
-  early_stopping_rounds: 30
-  lr: 0.001
+  batch_size: 64
+  
+  iters: 400
+  early_stopping_rounds: 23
+  lr: 0.001706322160346846

@@ -4,6 +4,10 @@ from captum.attr import DeepLift
 from captum.attr import ShapleyValueSampling
 from captum.attr import LayerConductance
 from captum.attr import NeuronConductance
+from captum.attr import LayerFeatureAblation, LayerConductance
+from captum.attr import NeuronFeatureAblation
+from captum.attr import GradientShap
+from captum.attr import ShapleyValueSampling
 
 import torch
 import numpy as np
@@ -15,22 +19,53 @@ from sklearn.neighbors import KNeighborsClassifier
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-def get_shapley_values(model, inp, target, baselines, n_samples=100, batch=50):
-    def model_wrapper(x):
-        return model(x)[0]
+def get_shapley_values(inp, model, targets, baselines, n_samples=64, perturbations_per_eval=64):
+    inp = inp.reshape((-1,1,96))
+    input_feature = ShapleyValueSampling(lambda x: model(x)[0])
+    input_attrs = []
+    for i in targets:
+        print(i, end=" ")
+        attr = input_feature.attribute(inp, target=(0,i), 
+            baselines=baselines,
+            n_samples=n_samples, 
+            perturbations_per_eval=perturbations_per_eval
+        )
+        attr = np.mean(attr.detach().numpy(), axis=0).flatten() # smoothgrad: mean of attributions
+        input_attrs.append(attr)
+    return input_attrs
 
-    inp.requires_grad_()
+def get_layer_attrs(inp, model, layer, targets, baselines=None):
+    inp = inp.reshape((-1,1,96))
+    layer_feature = LayerFeatureAblation(lambda x : model(x)[0], layer)
+    layer_attrs = []
+    for i in targets:
+        attr = layer_feature.attribute(inp, target=(0,i), layer_baselines=baselines)
+        attr = attr.detach().numpy().flatten()
+        layer_attrs.append(attr)
+    return layer_attrs
 
-    #baselines = tuple(torch.rand((1,1,96)) for _ in range(1000))
+def get_neuron_attrs(inp, model, layer, targets, baselines=None):
+    inp = inp.reshape((-1,1,96))
+    neuron_feature = NeuronFeatureAblation(lambda x : model(x)[0], layer)
+    neuron_attrs = []
+    for i in targets:
+        attr = neuron_feature.attribute(inp, neuron_selector=i, baselines=baselines)
+        attr = attr.detach().numpy().flatten()
+        neuron_attrs.append(attr)
+    return neuron_attrs
 
-    inter = ShapleyValueSampling(model_wrapper)
-    attr = inter.attribute(inp, target=(0,target), 
-        baselines=baselines,
-        n_samples=n_samples, 
-        perturbations_per_eval=batch
-    )
+# ...
 
-    return attr.detach().numpy()
+def plot_shapley_ts(inp, sv_vec, filename):
+    ylim = (np.min(sv_vec),1)
+    for i in range(96):
+        plt.plot(sv_vec[i].flatten())
+        plt.plot(inp.detach().numpy().flatten())
+        plt.title(f"Position {i}")
+        plt.ylim(ylim)
+        plt.axvline(x=i, c="red")
+        plt.savefig(f"../plots/{filename}.png")
+        plt.close()
 
 def baseline(data_train, data_valid, data_test):
     X_train, y_train = data_train[:,0,:-1], data_train[:,0,-1].numpy()

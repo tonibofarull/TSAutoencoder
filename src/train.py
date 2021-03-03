@@ -36,9 +36,8 @@ class Trainer():
             train_running_loss = 0
             model.train()
             for batch in trainloader:
-                train_loss = model.loss(batch)
-
                 optimizer.zero_grad()
+                train_loss = model.loss(batch)
                 train_loss.backward()
                 optimizer.step()
 
