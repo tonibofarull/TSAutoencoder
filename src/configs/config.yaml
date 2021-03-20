@@ -14,6 +14,6 @@ train:
   shuffle: True # shuffle training data after each epoch
   batch_size: 64
   
-  iters: 400
+  iters: 300
   early_stopping_rounds: 23
   lr: 0.001706322160346846

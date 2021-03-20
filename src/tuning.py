@@ -34,7 +34,7 @@ def objective(config, data, cfg, checkpoint_dir=None):
     model = CAE(cfg.model, num_classes=7)
     trainer = Trainer(cfg.train)
     trainer.fit(model, data_train, data_valid1)
-    loss = model.loss(data_valid2, do_reg=False).item()
+    loss = model.loss(data_valid2, apply_reg=False).item()
     tune.report(loss=loss)
 
 def main(

@@ -19,20 +19,20 @@ from sklearn.neighbors import KNeighborsClassifier
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-def get_shapley_values(inp, model, targets, baselines, n_samples=64, perturbations_per_eval=64):
+def get_shapley_values(inp, model, targets, baselines, n_samples=64, perturbations_per_eval=64, target_func=lambda x: (0,x)):
     inp = inp.reshape((-1,1,96))
-    input_feature = ShapleyValueSampling(lambda x: model(x)[0])
+    input_feature = ShapleyValueSampling(model)
+    # input_feature = ShapleyValueSampling(lambda x: model(x)[0])
     input_attrs = []
     for i in targets:
         print(i, end=" ")
-        attr = input_feature.attribute(inp, target=(0,i), 
+        attr = input_feature.attribute(inp, target=target_func(i), 
             baselines=baselines,
             n_samples=n_samples, 
             perturbations_per_eval=perturbations_per_eval
         )
-        attr = np.mean(attr.detach().numpy(), axis=0).flatten() # smoothgrad: mean of attributions
-        input_attrs.append(attr)
-    return input_attrs
+        input_attrs.append(attr.detach().numpy().flatten())
+    return np.array(input_attrs)
 
 def get_layer_attrs(inp, model, layer, targets, baselines=None):
     inp = inp.reshape((-1,1,96))
@@ -42,7 +42,7 @@ def get_layer_attrs(inp, model, layer, targets, baselines=None):
         attr = layer_feature.attribute(inp, target=(0,i), layer_baselines=baselines)
         attr = attr.detach().numpy().flatten()
         layer_attrs.append(attr)
-    return layer_attrs
+    return np.array(layer_attrs)
 
 def get_neuron_attrs(inp, model, layer, targets, baselines=None):
     inp = inp.reshape((-1,1,96))
@@ -52,7 +52,7 @@ def get_neuron_attrs(inp, model, layer, targets, baselines=None):
         attr = neuron_feature.attribute(inp, neuron_selector=i, baselines=baselines)
         attr = attr.detach().numpy().flatten()
         neuron_attrs.append(attr)
-    return neuron_attrs
+    return np.array(neuron_attrs)
 
 # ...
 

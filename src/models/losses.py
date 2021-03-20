@@ -10,7 +10,7 @@ class CAELoss(nn.Module):
         self.alpha = alpha
         self.lmd = lmd
 
-    def forward(self, model, pred_X, X, pred_clss, clss, do_reg=True):
+    def forward(self, model, pred_X, X, pred_clss, clss, apply_reg=True):
         # Classification:
         loss_class = F.cross_entropy(pred_clss, clss)
         # Reconstruction:
@@ -25,7 +25,7 @@ class CAELoss(nn.Module):
         loss_row = _my_group_row(model)
 
         loss = self.alpha*loss_class + (1-self.alpha)*loss_recon
-        if do_reg:
+        if apply_reg:
             loss += self.lmd*(loss_reg + loss_col + loss_row)
         return loss
 
@@ -48,13 +48,13 @@ def _my_group_col(model): # we should apply l1-reg as well
     columns = model.k*model.M
     weights_per_column = model.length
     for i in range(columns):
-        group = model.full_conv_bn.weight[:,weights_per_column*i:weights_per_column*(i+1)]
+        group = model.encoder.fc_conv_bn.weight[:,weights_per_column*i:weights_per_column*(i+1)]
         loss += np.sqrt(len(group))*torch.sqrt(torch.sum(torch.square(group)))
     return loss
 
 def _my_group_row(model): # we should apply l1-reg as well
     loss = 0
     for i in range(model.bottleneck_nn):
-        group = model.full_conv_bn.weight[i]
+        group = model.encoder.fc_conv_bn.weight[i]
         loss += np.sqrt(len(group))*torch.sqrt(torch.sum(torch.square(group)))
     return loss
