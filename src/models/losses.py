@@ -18,43 +18,47 @@ class CAELoss(nn.Module):
         loss_recon = F.binary_cross_entropy(pred_X, X) # if output [0,1]
         # Regularization:
         # - Whole model:
-        loss_reg = _my_l1(model)
+        loss_reg = CAELoss._my_l1(model)
         # - Filters:
-        loss_col = _my_group_col(model)
+        loss_col = CAELoss._my_group_col(model)
         # - Neurons:
-        loss_row = _my_group_row(model)
+        loss_row = CAELoss._my_group_row(model)
 
         loss = self.alpha*loss_class + (1-self.alpha)*loss_recon
         if apply_reg:
             loss += self.lmd*(loss_reg + loss_col + loss_row)
         return loss
 
-# UTILS
+    # UTILS
 
-def _my_l2(model):
-    l2 = 0
-    for param in model.parameters():
-        l2 += torch.sum(torch.square(param))
-    return l2
+    @staticmethod
+    def _my_l2(model):
+        l2 = 0
+        for param in model.parameters():
+            l2 += torch.sum(torch.square(param))
+        return l2
 
-def _my_l1(model):
-    l1 = 0
-    for param in model.parameters():
-        l1 += torch.sum(torch.abs(param))
-    return l1
+    @staticmethod
+    def _my_l1(model):
+        l1 = 0
+        for param in model.parameters():
+            l1 += torch.sum(torch.abs(param))
+        return l1
 
-def _my_group_col(model): # we should apply l1-reg as well
-    loss = 0
-    columns = model.k*model.M
-    weights_per_column = model.length
-    for i in range(columns):
-        group = model.encoder.fc_conv_bn.weight[:,weights_per_column*i:weights_per_column*(i+1)]
-        loss += np.sqrt(len(group))*torch.sqrt(torch.sum(torch.square(group)))
-    return loss
+    @staticmethod
+    def _my_group_col(model): # we should apply l1-reg as well
+        loss = 0
+        columns = model.k*model.M
+        weights_per_column = model.length
+        for i in range(columns):
+            group = model.encoder.fc_conv_bn.weight[:,weights_per_column*i:weights_per_column*(i+1)]
+            loss += np.sqrt(len(group))*torch.sqrt(torch.sum(torch.square(group)))
+        return loss
 
-def _my_group_row(model): # we should apply l1-reg as well
-    loss = 0
-    for i in range(model.bottleneck_nn):
-        group = model.encoder.fc_conv_bn.weight[i]
-        loss += np.sqrt(len(group))*torch.sqrt(torch.sum(torch.square(group)))
-    return loss
+    @staticmethod
+    def _my_group_row(model): # we should apply l1-reg as well
+        loss = 0
+        for i in range(model.bottleneck_nn):
+            group = model.encoder.fc_conv_bn.weight[i]
+            loss += np.sqrt(len(group))*torch.sqrt(torch.sum(torch.square(group)))
+        return loss
