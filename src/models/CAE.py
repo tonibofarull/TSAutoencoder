@@ -6,7 +6,7 @@ from models.losses import CAELoss
 class Encoder(nn.Module):
     def __init__(self, k, M, Lf, dilation, length, bottleneck_nn):
         super().__init__()
-        # By using ModuleList we the layers of the list are properly registered
+        # By using ModuleList we ensure that the layers of the list are properly registered
         self.conv1 = nn.ModuleList([nn.Conv1d(1, M, kernel_size=Lf, dilation=d, padding=d*(Lf-1)//2) for d in dilation])
         self.act1 = nn.LeakyReLU()
         self.fc_conv_bn = nn.Linear(k*M*length, bottleneck_nn)
