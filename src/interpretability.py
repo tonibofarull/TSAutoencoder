@@ -35,7 +35,7 @@ def shapley_sampling(x, model, feature, n_batches=1, batch_size=64):
     sv /= n_batches*batch_size
     return sv.numpy()
 
-def shapley_sampling_bottleneck_output(x, model, feature, baselines=None, n_batches=1, batch_size=64):
+def shapley_sampling_bottleneck_output(x, model, feature, baselines, n_batches=1, batch_size=64):
     """
     Importance of neuron with respect the output
     """
@@ -68,7 +68,7 @@ def shapley_sampling_bottleneck_output(x, model, feature, baselines=None, n_batc
     sv /= n_batches*batch_size
     return sv.numpy()
 
-def shapley_sampling_bottleneck_class(x, model, feature, baselines=None, n_batches=1, batch_size=64):
+def shapley_sampling_bottleneck_class(x, model, feature, baselines, n_batches=1, batch_size=64):
     sv = torch.zeros(7)
     x = model.encoder(x.reshape(1,1,96), False) # bottleneck
     length = x.shape[-1]
@@ -96,7 +96,7 @@ def shapley_sampling_bottleneck_class(x, model, feature, baselines=None, n_batch
     sv /= n_batches*batch_size
     return sv.numpy()
 
-def shapley_sampling_input_bottleneck(x, model, feature, baselines=None, n_batches=1, batch_size=64):
+def shapley_sampling_input_bottleneck(x, model, feature, n_batches=1, batch_size=64):
     length = x.shape[-1]
     sv = torch.zeros(model.bottleneck_nn)
 
@@ -124,7 +124,7 @@ def shapley_sampling_input_bottleneck(x, model, feature, baselines=None, n_batch
     sv /= n_batches*batch_size
     return sv.numpy()
 
-def shapley_sampling_input_class(x, model, feature, baselines=None, n_batches=1, batch_size=64):
+def shapley_sampling_input_class(x, model, feature, n_batches=1, batch_size=64):
     length = x.shape[-1]
     sv = torch.zeros(model.num_classes)
 
