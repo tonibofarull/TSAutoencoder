@@ -2,9 +2,27 @@ import torch
 import numpy as np
 from torch import optim
 
+def get_hist(x):
+    x = x.reshape(-1,1)
+    n = x.shape[0]
+    counts, bins = np.histogram(x, bins="auto") # TODO: check auto
+
+    counts = n-counts
+    probs = counts/sum(counts)
+    return bins, probs
+
+def sample_from_hist(hist, size=1):
+    """
+    Select bin with probability and uniformly selects and element of the bin
+    """
+    bins, probs = hist
+    As = np.random.choice(a=range(len(probs)), p=probs, replace=True, size=size)
+    elems = [np.random.uniform(bins[a], bins[a+1]) for a in As]
+    return np.array(elems)
+
 # Shapley Values
 
-def shapley_sampling(x, model, feature, n_batches=1, batch_size=64):
+def shapley_sampling(x, model, feature, n_batches=1, batch_size=64, histograms=None):
     """
     Importance of input with respect the output
     """
@@ -13,7 +31,13 @@ def shapley_sampling(x, model, feature, n_batches=1, batch_size=64):
 
     x = x.reshape(1, length).repeat(batch_size, 1)
     for _ in range(n_batches):
-        y = torch.rand((batch_size, length))
+        # y = torch.rand((batch_size, length))
+        y = torch.zeros((batch_size, length))
+
+        for i in range(96):
+            y[:,i] = torch.tensor(sample_from_hist(histograms[i], size=batch_size))
+        # END OF SAMPLING
+        
         O = np.array([np.random.permutation(length) for _ in range(batch_size)])
         idx = np.where(O == feature)
         Os = [O[i,:j] for i, j in zip(idx[0], idx[1])]
