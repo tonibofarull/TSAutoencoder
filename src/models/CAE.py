@@ -3,48 +3,53 @@ from torch import nn
 import torch.nn.functional as F
 from models.losses import CAELoss
 
+
 class Encoder(nn.Module):
     def __init__(self, k, M, Lf, dilation, length, bottleneck_nn):
         super().__init__()
         # By using ModuleList we ensure that the layers of the list are properly registered
-        self.conv1 = nn.ModuleList([nn.Conv1d(1, M, kernel_size=Lf, dilation=d, padding=d*(Lf-1)//2) for d in dilation])
+        self.conv1 = nn.ModuleList(
+            [nn.Conv1d(1, M, kernel_size=Lf, dilation=d, padding=d * (Lf - 1) // 2) for d in dilation]
+        )
         self.act1 = nn.LeakyReLU()
-        self.fc_conv_bn = nn.Linear(k*M*length, bottleneck_nn)
+        self.fc_conv_bn = nn.Linear(k * M * length, bottleneck_nn)
         self.last_act = nn.LeakyReLU()
 
-    def forward(self, X, apply_noise): # (N, 1, length)
+    def forward(self, X, apply_noise):  # (N, 1, length)
         if apply_noise:
             noise = torch.normal(mean=0, std=0.05, size=X.shape)
-            X = torch.clip(X+noise, min=0, max=1)
-        X = [conv(X) for conv in self.conv1] # [(N, M, length)]*k
-        X = torch.cat(X, dim=1) # (N, k*M, length)
-        X = self.act1(torch.flatten(X, start_dim=1)) # (N, k*M*length)
-        X = self.last_act(self.fc_conv_bn(X)) # (N, bottleneck_nn)
+            X = torch.clip(X + noise, min=0, max=1)
+        X = [conv(X) for conv in self.conv1]  # [(N, M, length)]*k
+        X = torch.cat(X, dim=1)  # (N, k*M, length)
+        X = self.act1(torch.flatten(X, start_dim=1))  # (N, k*M*length)
+        X = self.last_act(self.fc_conv_bn(X))  # (N, bottleneck_nn)
         return X
+
 
 class Decoder(nn.Module):
     def __init__(self, k, M, Lf, dilation, length, bottleneck_nn):
         super().__init__()
         self.k, self.M, self.length = k, M, length
 
-        self.fc_bn_deco = nn.Linear(bottleneck_nn, k*M*length)
+        self.fc_bn_deco = nn.Linear(bottleneck_nn, k * M * length)
         self.act1 = nn.LeakyReLU()
-        self.deco1 = nn.ModuleList([nn.ConvTranspose1d(M, 1, kernel_size=Lf, dilation=d, padding=d*(Lf-1)//2) for d in dilation])
+        self.deco1 = nn.ModuleList(
+            [nn.ConvTranspose1d(M, 1, kernel_size=Lf, dilation=d, padding=d * (Lf - 1) // 2) for d in dilation]
+        )
         self.last_act = nn.Sigmoid()
 
-    def forward(self, X): # (N, bottleneck_nn)
-        X = self.act1(self.fc_bn_deco(X)) # (N, k*M*length)
-        X = X.reshape(-1, self.k*self.M, self.length) # (N, k*M, length)
-        X = torch.split(X, split_size_or_sections=self.M, dim=1) # [(N, M, length)]*k
-        X = [deco(X[i]) for i, deco in enumerate(self.deco1)] # [(N, 1, length)]*k
-        X = torch.stack(X) # (k, N, 1, length)
-        X = self.last_act(torch.sum(X, dim=0)) # (N, 1, length), output values between 0 and 1
+    def forward(self, X):  # (N, bottleneck_nn)
+        X = self.act1(self.fc_bn_deco(X))  # (N, k*M*length)
+        X = X.reshape(-1, self.k * self.M, self.length)  # (N, k*M, length)
+        X = torch.split(X, split_size_or_sections=self.M, dim=1)  # [(N, M, length)]*k
+        X = [deco(X[i]) for i, deco in enumerate(self.deco1)]  # [(N, 1, length)]*k
+        X = torch.stack(X)  # (k, N, 1, length)
+        X = self.last_act(torch.sum(X, dim=0))  # (N, 1, length), output values between 0 and 1
         return X
 
+
 class Classifier(nn.Module):
-    def __init__(self, bottleneck_nn, num_classes,
-        hidden_nn=32
-    ):
+    def __init__(self, bottleneck_nn, num_classes, hidden_nn=32):
         super().__init__()
         self.fc1 = nn.Linear(bottleneck_nn, hidden_nn)
         self.act1 = nn.LeakyReLU()
@@ -66,13 +71,10 @@ class Classifier(nn.Module):
 
 
 class CAE(nn.Module):
-    def __init__(self, cfg,
-        dilation=[1, 2, 4, 8],
-        num_classes=3
-    ):
+    def __init__(self, cfg, dilation=[1, 2, 4, 8], num_classes=3):
         super().__init__()
-        self.k = len(dilation) # Number of dilations
-        self.M = cfg.M # Number of filters per dilation
+        self.k = len(dilation)  # Number of dilations
+        self.M = cfg.M  # Number of filters per dilation
         self.Lf = cfg.Lf
         self.bottleneck_nn = cfg.bottleneck_nn
         self.length = cfg.length
@@ -111,8 +113,9 @@ class CAE(nn.Module):
         """
         batch: (N, 1, length+1) where the extra column of an observation is the class
         """
-        X, y = batch[:,:,:-1], batch[:,:,-1]
+        X, y = batch[:, :, :-1], batch[:, :, -1]
         return X, y
+
 
 # class Encoder2(nn.Module):
 #     def __init__(self, k, M, Lf, dilation, length, bottleneck_nn):
