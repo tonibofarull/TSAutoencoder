@@ -3,13 +3,13 @@ import numpy as np
 from torch import optim
 
 
-def get_hist(x):
+def get_hist(x, alpha=1):
     x = x.reshape(-1, 1)
-    n = x.shape[0]
     counts, bins = np.histogram(x, bins="auto")  # TODO: check auto
 
-    counts = n - counts
+    counts += 1 # Laplace smoothing
     probs = counts / sum(counts)
+    probs = probs**alpha / sum(probs**alpha)
     return bins, probs
 
 
@@ -30,14 +30,16 @@ def shapley_sampling(x, func, feature, histograms=None, n_batches=10, batch_size
     """
     Importance of input with respect the output
     """
-    length = x.shape[0]
+    length = x.shape[-1]
     sv = torch.zeros(func(x).shape[-1])
-    x = x.reshape(1, length).repeat(batch_size, 1)
+    x = x.float().reshape(1, length).repeat(batch_size, 1)
+
     for _ in range(n_batches):
         # SAMPLING
         y = torch.zeros((batch_size, length))
-        for i in range(length):
-            y[:, i] = torch.tensor(sample_from_hist(histograms[i], size=batch_size))
+        if histograms is not None:
+            for i in range(length):
+                y[:, i] = torch.tensor(sample_from_hist(histograms[i], size=batch_size))
         # END OF SAMPLING
 
         O = np.array([np.random.permutation(length) for _ in range(batch_size)])
