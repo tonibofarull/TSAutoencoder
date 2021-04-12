@@ -1,19 +1,17 @@
-# MODEL
 model:
-  M: 4 # number of filters per conv
-  Lf: 3 # size of the filters
-  length: 96
-  bottleneck_nn: 24
+    M: 4 # number of filters per conv
+    Lf: 3 # size of the filters
+    length: 96
+    bottleneck_nn: 24
 
-  lmd: 1.0979131326372968e-05
-  alpha: 0.05
+    lmd: 1.0979131326372968e-05
+    alpha: 0.05
 
-# TRAINING
 train:
-  verbose: True # print information of the training
-  shuffle: True # shuffle training data after each epoch
-  batch_size: 64
-  
-  iters: 300
-  early_stopping_rounds: 23
-  lr: 0.001706322160346846
+    verbose: True # print information of the training
+    shuffle: True # shuffle training data after each epoch
+    batch_size: 64
+    
+    iters: 300
+    early_stopping_rounds: 23
+    lr: 0.001706322160346846
