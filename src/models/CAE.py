@@ -115,38 +115,3 @@ class CAE(nn.Module):
         """
         X, y = batch[:, :, :-1], batch[:, :, -1]
         return X, y
-
-
-# class Encoder2(nn.Module):
-#     def __init__(self, k, M, Lf, dilation, length, bottleneck_nn):
-#         super().__init__()
-#         # By using ModuleList we the layers of the list are properly registered
-#         self.conv = nn.Linear(length, k*M*length)
-#         self.first_act = nn.LeakyReLU()
-#         self.full_conv_bn = nn.Linear(k*M*length, bottleneck_nn)
-#         self.last_act = nn.LeakyReLU()
-
-#     def forward(self, X, apply_noise): # (N, 1, length)
-#         inp = X
-#         if apply_noise:
-#             inp = torch.clip(X+torch.normal(mean=0, std=0.05, size=X.shape), min=0, max=1)
-#         inp = inp.reshape(-1,96)
-#         X = self.first_act(self.conv(inp)) # (N, k*M*length)
-#         X = self.last_act(self.full_conv_bn(X)) # (N, bottleneck_nn)
-#         return X
-
-# class Decoder2(nn.Module):
-#     def __init__(self, k, M, Lf, dilation, length, bottleneck_nn):
-#         super().__init__()
-#         self.k, self.M, self.length = k, M, length
-
-#         self.full_bn_deco = nn.Linear(bottleneck_nn, k*M*length)
-#         self.first_act = nn.LeakyReLU()
-#         self.deco = nn.Linear(k*M*length, length)
-#         self.last_act = nn.Sigmoid()
-
-#     def forward(self, X): # (N, bottleneck_nn)
-#         X = self.first_act(self.full_bn_deco(X))
-#         X = self.last_act(self.deco(X)) # (N, 1, length), output values between 0 and 1
-#         X = X.reshape(-1,1,96)
-#         return X
