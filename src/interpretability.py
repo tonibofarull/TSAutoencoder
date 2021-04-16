@@ -7,9 +7,10 @@ def get_hist(x, alpha=1):
     x = x.reshape(-1, 1)
     counts, bins = np.histogram(x, bins="auto")  # TODO: check auto
 
-    counts += 1 # Laplace smoothing
+    if alpha < 0:
+        counts += 1
     probs = counts / sum(counts)
-    probs = probs**alpha / sum(probs**alpha)
+    probs = probs ** alpha / sum(probs ** alpha)
     return bins, probs
 
 
@@ -58,7 +59,7 @@ def shapley_sampling(x, func, feature, histograms=None, n_batches=10, batch_size
             v2 = func(x2)
         sv += torch.sum(v1 - v2, axis=0)
 
-    sv /= (n_batches * batch_size)
+    sv /= n_batches * batch_size
     return sv.numpy()
 
 
