@@ -9,10 +9,10 @@ class Encoder(nn.Module):
         super().__init__()
         # By using ModuleList we ensure that the layers of the list are properly registered
         self.conv1 = nn.ModuleList(
-            [nn.Conv1d(1, M, kernel_size=Lf, dilation=d, padding=d * (Lf - 1) // 2) for d in dilation]
+            [nn.Conv1d(1, M, kernel_size=Lf, dilation=d, padding=d*(Lf-1)//2) for d in dilation]
         )
         self.act1 = nn.LeakyReLU()
-        self.fc_conv_bn = nn.Linear(k * M * length, bottleneck_nn)
+        self.fc_conv_bn = nn.Linear(k*M*length, bottleneck_nn)
         self.last_act = nn.LeakyReLU()
 
     def forward(self, X, apply_noise):  # (N, 1, length)
@@ -34,7 +34,7 @@ class Decoder(nn.Module):
         self.fc_bn_deco = nn.Linear(bottleneck_nn, k * M * length)
         self.act1 = nn.LeakyReLU()
         self.deco1 = nn.ModuleList(
-            [nn.ConvTranspose1d(M, 1, kernel_size=Lf, dilation=d, padding=d * (Lf - 1) // 2) for d in dilation]
+            [nn.ConvTranspose1d(M, 1, kernel_size=Lf, dilation=d, padding=d*(Lf-1)//2) for d in dilation]
         )
         self.last_act = nn.Sigmoid()
 
@@ -67,7 +67,7 @@ class Classifier(nn.Module):
 
     @staticmethod
     def get_probs(X):
-        return torch.nn.functional.softmax(X, dim=1)
+        return F.softmax(X, dim=1)
 
 
 class CAE(nn.Module):
@@ -113,5 +113,5 @@ class CAE(nn.Module):
         """
         batch: (N, 1, length+1) where the extra column of an observation is the class
         """
-        X, y = batch[:, :, :-1], batch[:, :, -1]
+        X, y = batch[:,:,:-1], batch[:,:,-1]
         return X, y

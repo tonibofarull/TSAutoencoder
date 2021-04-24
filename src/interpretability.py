@@ -20,14 +20,15 @@ def sample_from_hist(hist, size=1):
     """
     bins, probs = hist
     As = np.random.choice(a=range(len(probs)), p=probs, replace=True, size=size)
-    elems = [np.random.uniform(bins[a], bins[a + 1]) for a in As]
-    return np.array(elems)
+    pos = np.random.uniform(low=0, high=1, size=size)
+    lows, highs = bins[As], bins[As+1]
+    return np.array((1-pos)*lows+pos*highs)
 
 
 # Shapley Values
 
 
-def shapley_sampling(x, func, feature, histograms=None, n_batches=10, batch_size=64):
+def shapley_sampling(x, func, feature, histograms=None, n_y=10, n_batches=5, batch_size=64):
     """
     Importance of input with respect the output
     """
@@ -35,31 +36,39 @@ def shapley_sampling(x, func, feature, histograms=None, n_batches=10, batch_size
     sv = torch.zeros(func(x).shape[-1])
     x = x.float().reshape(1, length).repeat(batch_size, 1)
 
-    for _ in range(n_batches):
-        # SAMPLING
-        y = torch.zeros((batch_size, length))
-        if histograms is not None:
-            for i in range(length):
-                y[:, i] = torch.tensor(sample_from_hist(histograms[i], size=batch_size))
-        # END OF SAMPLING
+    if histograms is None:
+        ys = torch.zeros((n_y, length))
+    else:
+        ys = torch.tensor([sample_from_hist(histograms[i], size=n_y) for i in range(length)], dtype=torch.float32).T
 
-        O = np.array([np.random.permutation(length) for _ in range(batch_size)])
-        idx = np.where(O == feature)
-        Os = [O[i, :j] for i, j in zip(idx[0], idx[1])]
+    for y in ys:
+        y = y.reshape(1,-1)
+        for _ in range(n_batches):
+            # List of permutations
+            perms = np.array([np.random.permutation(length) for _ in range(batch_size)])
+            # List of, for every row, where the index of the feature is
+            idx = np.where(perms == feature) # ([0,1,2,...], [3,7,2,...])
+            # List containing different sets S
+            perms_S = [perms[i,:j] for i, j in zip(idx[0], idx[1])]
 
-        sel = torch.zeros((batch_size, length), dtype=torch.bool)
-        sel[np.concatenate([np.repeat(i, len(Os[i])) for i in range(batch_size)]), np.concatenate(Os)] = True
+            # Vector indicating if select from X or from B (baseline)
+            sel = torch.zeros((batch_size, length), dtype=torch.bool) # Matrix of False
+            rows = np.concatenate([np.repeat(i, len(perms_S[i])) for i in range(batch_size)])
+            cols = np.concatenate(perms_S)
+            sel[rows,cols] = True
 
-        x2 = torch.where(sel, x, y)
-        x1 = x2.clone()
-        x1[:, feature] = x[:, feature]
+            # Select positions of X where index is before in the permutation
+            x2 = torch.where(sel, x, y)
+            x1 = x2.clone()
+            # For X1, also include the feature position
+            x1[:,feature] = x[:,feature]
 
-        with torch.no_grad():
-            v1 = func(x1)
-            v2 = func(x2)
-        sv += torch.sum(v1 - v2, axis=0)
+            with torch.no_grad():
+                v1 = func(x1)
+                v2 = func(x2)
+            sv += torch.sum(v1 - v2, axis=0)
 
-    sv /= n_batches * batch_size
+    sv /= (n_y * n_batches * batch_size)
     return sv.numpy()
 
 
