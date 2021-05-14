@@ -21,8 +21,8 @@ def sample_from_hist(hist, size=1):
     bins, probs = hist
     As = np.random.choice(a=range(len(probs)), p=probs, replace=True, size=size)
     pos = np.random.uniform(low=0, high=1, size=size)
-    lows, highs = bins[As], bins[As+1]
-    return np.array((1-pos)*lows + pos*highs)
+    lows, highs = bins[As], bins[As + 1]
+    return np.array((1 - pos) * lows + pos * highs)
 
 
 # Shapley Values
@@ -39,38 +39,41 @@ def shapley_sampling(x, func, feature, histograms=None, n_y=10, n_batches=5, bat
     if histograms is None:
         ys = torch.zeros((n_y, length))
     else:
-        ys = torch.tensor([sample_from_hist(histograms[i], size=n_y) for i in range(length)], dtype=torch.float32).T
-    
+        ys = torch.tensor(
+            [sample_from_hist(histograms[i], size=n_y) for i in range(length)],
+            dtype=torch.float32,
+        ).T
+
     phis = []
 
     for y in ys:
-        y = y.reshape(1,-1)
+        y = y.reshape(1, -1)
         sv = torch.zeros(shape_out)
         for _ in range(n_batches):
             # List of permutations
             perms = np.array([np.random.permutation(length) for _ in range(batch_size)])
             # List of, for every row, where the index of the feature is
-            idx = np.where(perms == feature) # ([0,1,2,...], [3,7,2,...])
+            idx = np.where(perms == feature)  # ([0,1,2,...], [3,7,2,...])
             # List containing different sets S
-            perms_S = [perms[i,:j] for i, j in zip(idx[0], idx[1])]
+            perms_S = [perms[i, :j] for i, j in zip(idx[0], idx[1])]
 
             # Vector indicating if select from X or from B (baseline)
-            sel = torch.zeros((batch_size, length), dtype=torch.bool) # Matrix of False
+            sel = torch.zeros((batch_size, length), dtype=torch.bool)  # Matrix of False
             rows = np.concatenate([np.repeat(i, len(perms_S[i])) for i in range(batch_size)])
             cols = np.concatenate(perms_S)
-            sel[rows,cols] = True
+            sel[rows, cols] = True
 
             # Select positions of X where index is before in the permutation
             x2 = torch.where(sel, x, y)
             x1 = x2.clone()
             # For X1, also include the feature position
-            x1[:,feature] = x[:,feature]
+            x1[:, feature] = x[:, feature]
 
             with torch.no_grad():
                 v1 = func(x1)
                 v2 = func(x2)
             sv += torch.sum(v1 - v2, axis=0)
-        sv /= (n_batches*batch_size)
+        sv /= n_batches * batch_size
         phis.append(sv.numpy())
 
     phis = np.stack(phis)
