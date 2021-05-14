@@ -9,10 +9,13 @@ class Encoder(nn.Module):
         super().__init__()
         # By using ModuleList we ensure that the layers of the list are properly registered
         self.conv1 = nn.ModuleList(
-            [nn.Conv1d(1, M, kernel_size=Lf, dilation=d, padding=d*(Lf-1)//2) for d in dilation]
+            [
+                nn.Conv1d(1, M, kernel_size=Lf, dilation=d, padding=d * (Lf - 1) // 2)
+                for d in dilation
+            ]
         )
         self.act1 = nn.LeakyReLU()
-        self.fc_conv_bn = nn.Linear(k*M*length, bottleneck_nn)
+        self.fc_conv_bn = nn.Linear(k * M * length, bottleneck_nn)
         self.last_act = nn.LeakyReLU()
 
     def forward(self, X, apply_noise):  # (N, 1, length)
@@ -34,7 +37,12 @@ class Decoder(nn.Module):
         self.fc_bn_deco = nn.Linear(bottleneck_nn, k * M * length)
         self.act1 = nn.LeakyReLU()
         self.deco1 = nn.ModuleList(
-            [nn.ConvTranspose1d(M, 1, kernel_size=Lf, dilation=d, padding=d*(Lf-1)//2) for d in dilation]
+            [
+                nn.ConvTranspose1d(
+                    M, 1, kernel_size=Lf, dilation=d, padding=d * (Lf - 1) // 2
+                )
+                for d in dilation
+            ]
         )
         self.last_act = nn.Sigmoid()
 
@@ -44,7 +52,9 @@ class Decoder(nn.Module):
         X = torch.split(X, split_size_or_sections=self.M, dim=1)  # [(N, M, length)]*k
         X = [deco(X[i]) for i, deco in enumerate(self.deco1)]  # [(N, 1, length)]*k
         X = torch.stack(X)  # (k, N, 1, length)
-        X = self.last_act(torch.sum(X, dim=0))  # (N, 1, length), output values between 0 and 1
+        X = self.last_act(
+            torch.sum(X, dim=0)
+        )  # (N, 1, length), output values between 0 and 1
         return X
 
 
@@ -82,7 +92,13 @@ class CAE(nn.Module):
         self.num_classes = num_classes
         self.lossf = CAELoss(alpha=cfg.alpha, lmd=cfg.lmd)
 
-        k, M, Lf, bottleneck_nn, length = self.k, self.M, self.Lf, self.bottleneck_nn, self.length
+        k, M, Lf, bottleneck_nn, length = (
+            self.k,
+            self.M,
+            self.Lf,
+            self.bottleneck_nn,
+            self.length,
+        )
         # MODULES DEFINITION
         self.encoder = Encoder(k, M, Lf, dilation, length, bottleneck_nn)
         self.decoder = Decoder(k, M, Lf, dilation, length, bottleneck_nn)
@@ -113,5 +129,5 @@ class CAE(nn.Module):
         """
         batch: (N, 1, length+1) where the extra column of an observation is the class
         """
-        X, y = batch[:,:,:-1], batch[:,:,-1]
+        X, y = batch[:, :, :-1], batch[:, :, -1]
         return X, y

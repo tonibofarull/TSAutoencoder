@@ -18,7 +18,9 @@ class Trainer:
 
     def fit(self, model, X_train, X_valid):
         # Datasets and optimizer
-        trainloader = DataLoader(X_train, batch_size=self.batch_size, shuffle=self.shuffle)
+        trainloader = DataLoader(
+            X_train, batch_size=self.batch_size, shuffle=self.shuffle
+        )
         validloader = DataLoader(X_valid, batch_size=self.batch_size)
         optimizer = optim.Adam(model.parameters(), lr=self.lr)
         # Training loop
@@ -60,11 +62,17 @@ class Trainer:
                     # we must do a deep copy
                     early_stop["best_model"] = deepcopy(model.state_dict())
 
-            end_train = early_stop["rounds"] is not None and epoch > early_stop["rounds"]
-            end_train = end_train and epoch - early_stop["best_round"] >= early_stop["rounds"]
+            end_train = (
+                early_stop["rounds"] is not None and epoch > early_stop["rounds"]
+            )
+            end_train = (
+                end_train and epoch - early_stop["best_round"] >= early_stop["rounds"]
+            )
 
             if self.verbose and (epoch % 10 == 0 or end_train):
-                print(f"EPOCH {epoch} train loss: {train_running_loss}, valid loss: {valid_running_loss}")
+                print(
+                    f"EPOCH {epoch} train loss: {train_running_loss}, valid loss: {valid_running_loss}"
+                )
                 print(f"epochs without improvement: {epoch-early_stop['best_round']}")
                 print()
 

@@ -28,7 +28,9 @@ def sample_from_hist(hist, size=1):
 # Shapley Values
 
 
-def shapley_sampling(x, func, feature, histograms=None, n_y=10, n_batches=5, batch_size=64):
+def shapley_sampling(
+    x, func, feature, histograms=None, n_y=10, n_batches=5, batch_size=64
+):
     """
     Importance of input with respect the output
     """
@@ -59,7 +61,9 @@ def shapley_sampling(x, func, feature, histograms=None, n_y=10, n_batches=5, bat
 
             # Vector indicating if select from X or from B (baseline)
             sel = torch.zeros((batch_size, length), dtype=torch.bool)  # Matrix of False
-            rows = np.concatenate([np.repeat(i, len(perms_S[i])) for i in range(batch_size)])
+            rows = np.concatenate(
+                [np.repeat(i, len(perms_S[i])) for i in range(batch_size)]
+            )
             cols = np.concatenate(perms_S)
             sel[rows, cols] = True
 

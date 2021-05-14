@@ -77,7 +77,9 @@ def main(
         cfg.model.alpha = alpha
 
         analysis = tune.run(
-            lambda config, checkpoint_dir=None: objective(config, data, cfg, checkpoint_dir),
+            lambda config, checkpoint_dir=None: objective(
+                config, data, cfg, checkpoint_dir
+            ),
             name=f"alpha_{exp}",
             num_samples=num_samples,
             config=config,

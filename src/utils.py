@@ -53,13 +53,17 @@ def baseline(data_train, data_valid, data_test):
 
 def shapley_input_vs_output(model, selected, X_test, hist_input):
     func = lambda x: model(x.reshape(-1, 1, 96), False)[0][:, 0]
-    f_attrs = lambda inp: np.array([shapley_sampling(inp, func, j, hist_input) for j in range(model.length)])
+    f_attrs = lambda inp: np.array(
+        [shapley_sampling(inp, func, j, hist_input) for j in range(model.length)]
+    )
     attrs = []
     for i, x in enumerate(selected):
         print(i)
         attrs.append(f_attrs(X_test[x, 0]))
 
-    fig1, axs = plt.subplots(nrows=3, ncols=3, figsize=(15, 15), constrained_layout=True)
+    fig1, axs = plt.subplots(
+        nrows=3, ncols=3, figsize=(15, 15), constrained_layout=True
+    )
     axs = np.array(axs)
     axs[2, 1].set_axis_off()
     axs[2, 2].set_axis_off()
@@ -74,7 +78,9 @@ def shapley_input_vs_output(model, selected, X_test, hist_input):
         ax.set(xlabel="Output Time Series", ylabel="Input Time Series")
 
         ax = axs.flatten()[i].twinx()
-        sns.lineplot(x=range(96), y=X_test[x, 0], label="Original", color="green", ax=ax)
+        sns.lineplot(
+            x=range(96), y=X_test[x, 0], label="Original", color="green", ax=ax
+        )
         sns.lineplot(
             x=range(96),
             y=model(X_test[x, 0].reshape(1, 1, -1), False)[0][0, 0].detach().numpy(),
@@ -88,14 +94,18 @@ def shapley_input_vs_output(model, selected, X_test, hist_input):
 
 def shapley_bottleneck_vs_output(model, selected, X_test, hist_bn):
     func = lambda x: model.decoder(x)[:, 0, :]
-    f_attrs = lambda inp: np.array([shapley_sampling(inp, func, j, hist_bn) for j in range(model.bottleneck_nn)])
+    f_attrs = lambda inp: np.array(
+        [shapley_sampling(inp, func, j, hist_bn) for j in range(model.bottleneck_nn)]
+    )
     attrs = []
     for i, x in enumerate(selected):
         print(i)
         inp = model.encoder(X_test[x, 0].reshape(1, 1, -1), False).flatten()
         attrs.append(f_attrs(inp))
 
-    fig2, axs = plt.subplots(nrows=3, ncols=3, figsize=(15, 15), constrained_layout=True)
+    fig2, axs = plt.subplots(
+        nrows=3, ncols=3, figsize=(15, 15), constrained_layout=True
+    )
     axs = np.array(axs)
     axs[2, 1].set_axis_off()
     axs[2, 2].set_axis_off()
@@ -110,7 +120,9 @@ def shapley_bottleneck_vs_output(model, selected, X_test, hist_bn):
         ax.set(xlabel="Output Time Series", ylabel="Input Bottleneck")
 
         ax = axs.flatten()[i].twinx()
-        sns.lineplot(x=range(96), y=X_test[x, 0], label="Original", color="green", ax=ax)
+        sns.lineplot(
+            x=range(96), y=X_test[x, 0], label="Original", color="green", ax=ax
+        )
         sns.lineplot(
             x=range(96),
             y=model(X_test[x, 0].reshape(1, 1, -1), False)[0][0, 0].detach().numpy(),
@@ -124,14 +136,18 @@ def shapley_bottleneck_vs_output(model, selected, X_test, hist_bn):
 
 def shapley_input_vs_bottleneck(model, selected, X_test, hist_input):
     func = lambda x: model.encoder(x.reshape(-1, 1, 96), False)
-    f_attrs = lambda inp: np.array([shapley_sampling(inp, func, j, hist_input) for j in range(model.length)]).T
+    f_attrs = lambda inp: np.array(
+        [shapley_sampling(inp, func, j, hist_input) for j in range(model.length)]
+    ).T
     attrs = []
     for i, x in enumerate(selected):
         print(i)
         inp = X_test[x, 0]
         attrs.append(f_attrs(inp))
 
-    fig3, axs = plt.subplots(nrows=3, ncols=3, figsize=(15, 15), constrained_layout=True)
+    fig3, axs = plt.subplots(
+        nrows=3, ncols=3, figsize=(15, 15), constrained_layout=True
+    )
     axs = np.array(axs)
     axs[2, 1].set_axis_off()
     axs[2, 2].set_axis_off()
@@ -146,7 +162,9 @@ def shapley_input_vs_bottleneck(model, selected, X_test, hist_input):
         ax.set(xlabel="Input Time Series", ylabel="Output Bottleneck")
 
         ax = axs.flatten()[i].twinx()
-        sns.lineplot(x=range(96), y=X_test[x, 0], label="Original", color="green", ax=ax)
+        sns.lineplot(
+            x=range(96), y=X_test[x, 0], label="Original", color="green", ax=ax
+        )
         sns.lineplot(
             x=range(96),
             y=model(X_test[x, 0].reshape(1, 1, -1), False)[0][0, 0].detach().numpy(),
@@ -159,7 +177,9 @@ def shapley_input_vs_bottleneck(model, selected, X_test, hist_input):
 
 def shapley_bottleneck_vs_class(model, selected, X_test, hist_bn):
     func = lambda x: model.classifier.get_probs(model.classifier(x.reshape(-1, 24)))
-    f_attrs = lambda inp: np.array([shapley_sampling(inp, func, j, hist_bn) for j in range(model.bottleneck_nn)])
+    f_attrs = lambda inp: np.array(
+        [shapley_sampling(inp, func, j, hist_bn) for j in range(model.bottleneck_nn)]
+    )
     attrs = []
     for i, x in enumerate(selected):
         print(i)
@@ -183,15 +203,21 @@ def shapley_bottleneck_vs_class(model, selected, X_test, hist_bn):
 
 
 def shapley_input_vs_class(model, selected, X_test, hist_input):
-    func = lambda x: model.classifier.get_probs(model.classifier(model.encoder(x.reshape(-1, 1, 96), False)))
-    f_attrs = lambda inp: np.array([shapley_sampling(inp, func, j, hist_input) for j in range(model.length)]).T
+    func = lambda x: model.classifier.get_probs(
+        model.classifier(model.encoder(x.reshape(-1, 1, 96), False))
+    )
+    f_attrs = lambda inp: np.array(
+        [shapley_sampling(inp, func, j, hist_input) for j in range(model.length)]
+    ).T
     attrs = []
     for i, x in enumerate(selected):
         print(i)
         inp = X_test[x, 0]
         attrs.append(f_attrs(inp))
 
-    fig5, axs = plt.subplots(nrows=3, ncols=3, figsize=(15, 15), constrained_layout=True)
+    fig5, axs = plt.subplots(
+        nrows=3, ncols=3, figsize=(15, 15), constrained_layout=True
+    )
     axs = np.array(axs)
     axs[2, 1].set_axis_off()
     axs[2, 2].set_axis_off()
@@ -206,7 +232,9 @@ def shapley_input_vs_class(model, selected, X_test, hist_input):
         ax.set(xlabel="Input Time Series", ylabel="Output Bottleneck")
 
         ax = axs.flatten()[i].twinx()
-        sns.lineplot(x=range(96), y=X_test[x, 0], label="Original", color="green", ax=ax)
+        sns.lineplot(
+            x=range(96), y=X_test[x, 0], label="Original", color="green", ax=ax
+        )
         sns.lineplot(
             x=range(96),
             y=model(X_test[x, 0].reshape(1, 1, -1), False)[0][0, 0].detach().numpy(),

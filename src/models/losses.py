@@ -16,7 +16,7 @@ class CAELoss(nn.Module):
         # Reconstruction (in case of arbitrary output, use F.mse_loss(pred_X, X)):
         loss_recon = F.binary_cross_entropy(pred_X, X)  # since output [0,1]
 
-        loss = self.alpha*loss_class + (1-self.alpha)*loss_recon
+        loss = self.alpha * loss_class + (1 - self.alpha) * loss_recon
         if apply_reg:
             # Regularization:
             # - Whole model:
@@ -25,7 +25,7 @@ class CAELoss(nn.Module):
             loss_col = CAELoss._group_col(model)
             # - Neurons:
             loss_row = CAELoss._group_row(model)
-            loss += self.lmd*(loss_reg + loss_col + loss_row)
+            loss += self.lmd * (loss_reg + loss_col + loss_row)
         return loss
 
     # UTILS
@@ -47,10 +47,12 @@ class CAELoss(nn.Module):
     @staticmethod
     def _group_col(model):
         loss = 0
-        columns = model.k*model.M
+        columns = model.k * model.M
         weights_per_column = model.length
         for i in range(columns):
-            group = model.encoder.fc_conv_bn.weight[:, weights_per_column*i: weights_per_column*(i+1)]
+            group = model.encoder.fc_conv_bn.weight[
+                :, weights_per_column * i : weights_per_column * (i + 1)
+            ]
             loss += np.sqrt(len(group)) * torch.sqrt(torch.sum(torch.square(group)))
         return loss
 
