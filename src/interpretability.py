@@ -22,7 +22,7 @@ def sample_from_hist(hist, size=1):
     As = np.random.choice(a=range(len(probs)), p=probs, replace=True, size=size)
     pos = np.random.uniform(low=0, high=1, size=size)
     lows, highs = bins[As], bins[As+1]
-    return np.array((1-pos)*lows+pos*highs)
+    return np.array((1-pos)*lows + pos*highs)
 
 
 # Shapley Values
@@ -33,16 +33,19 @@ def shapley_sampling(x, func, feature, histograms=None, n_y=10, n_batches=5, bat
     Importance of input with respect the output
     """
     length = x.shape[-1]
-    sv = torch.zeros(func(x).shape[-1])
+    shape_out = func(x).shape[-1]
     x = x.float().reshape(1, length).repeat(batch_size, 1)
 
     if histograms is None:
         ys = torch.zeros((n_y, length))
     else:
         ys = torch.tensor([sample_from_hist(histograms[i], size=n_y) for i in range(length)], dtype=torch.float32).T
+    
+    phis = []
 
     for y in ys:
         y = y.reshape(1,-1)
+        sv = torch.zeros(shape_out)
         for _ in range(n_batches):
             # List of permutations
             perms = np.array([np.random.permutation(length) for _ in range(batch_size)])
@@ -67,9 +70,13 @@ def shapley_sampling(x, func, feature, histograms=None, n_y=10, n_batches=5, bat
                 v1 = func(x1)
                 v2 = func(x2)
             sv += torch.sum(v1 - v2, axis=0)
+        sv /= (n_batches*batch_size)
+        phis.append(sv.numpy())
 
-    sv /= (n_y * n_batches * batch_size)
-    return sv.numpy()
+    phis = np.stack(phis)
+    # print(np.std(phis, axis=0))
+    phis = np.mean(phis, axis=0)
+    return phis
 
 
 # Feature Visualization
