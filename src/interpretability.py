@@ -134,9 +134,7 @@ def shapley_input_vs_output(model, selected, X_test, hist_input):
         print(i)
         attrs.append(f_attrs(X_test[x, 0]))
 
-    fig1, axs = plt.subplots(
-        nrows=3, ncols=3, figsize=(15, 15), constrained_layout=True
-    )
+    fig, axs = plt.subplots(nrows=3, ncols=3, figsize=(15, 15), constrained_layout=True)
     axs = np.array(axs)
     axs[2, 1].set_axis_off()
     axs[2, 2].set_axis_off()
@@ -162,6 +160,7 @@ def shapley_input_vs_output(model, selected, X_test, hist_input):
             ax=ax,
         )
         ax.legend()
+    fig.savefig("sv_input-output_dist.png", dpi=100)
     plt.show()
 
 
@@ -176,9 +175,7 @@ def shapley_bottleneck_vs_output(model, selected, X_test, hist_bn):
         inp = model.encoder(X_test[x, 0].reshape(1, 1, -1), False).flatten()
         attrs.append(f_attrs(inp))
 
-    fig2, axs = plt.subplots(
-        nrows=3, ncols=3, figsize=(15, 15), constrained_layout=True
-    )
+    fig, axs = plt.subplots(nrows=3, ncols=3, figsize=(15, 15), constrained_layout=True)
     axs = np.array(axs)
     axs[2, 1].set_axis_off()
     axs[2, 2].set_axis_off()
@@ -204,6 +201,7 @@ def shapley_bottleneck_vs_output(model, selected, X_test, hist_bn):
             ax=ax,
         )
         ax.legend()
+    fig.savefig("sv_bottleneck-output_dist.png", dpi=100)
     plt.show()
 
 
@@ -218,9 +216,7 @@ def shapley_input_vs_bottleneck(model, selected, X_test, hist_input):
         inp = X_test[x, 0]
         attrs.append(f_attrs(inp))
 
-    fig3, axs = plt.subplots(
-        nrows=3, ncols=3, figsize=(15, 15), constrained_layout=True
-    )
+    fig, axs = plt.subplots(nrows=3, ncols=3, figsize=(15, 15), constrained_layout=True)
     axs = np.array(axs)
     axs[2, 1].set_axis_off()
     axs[2, 2].set_axis_off()
@@ -245,6 +241,7 @@ def shapley_input_vs_bottleneck(model, selected, X_test, hist_input):
             color="purple",
             ax=ax,
         )
+    fig.savefig("sv_input-bottleneck_dist.png", dpi=100)
     plt.show()
 
 
@@ -259,7 +256,7 @@ def shapley_bottleneck_vs_class(model, selected, X_test, hist_bn):
         inp = model.encoder(X_test[x, 0].reshape(1, 1, -1), False).flatten()
         attrs.append(f_attrs(inp))
 
-    fig4, axs = plt.subplots(nrows=3, ncols=3, figsize=(8, 8), constrained_layout=True)
+    fig, axs = plt.subplots(nrows=3, ncols=3, figsize=(8, 8), constrained_layout=True)
     axs = np.array(axs)
     axs[2, 1].set_axis_off()
     axs[2, 2].set_axis_off()
@@ -272,6 +269,7 @@ def shapley_bottleneck_vs_class(model, selected, X_test, hist_bn):
             cbar_kws={"orientation": "horizontal"},
         )
         ax.set(xlabel="Output Class", ylabel="Input Bottleneck")
+    fig.savefig("sv_bottleneck-class_dist.png", dpi=100)
     plt.show()
 
 
@@ -288,9 +286,7 @@ def shapley_input_vs_class(model, selected, X_test, hist_input):
         inp = X_test[x, 0]
         attrs.append(f_attrs(inp))
 
-    fig5, axs = plt.subplots(
-        nrows=3, ncols=3, figsize=(15, 15), constrained_layout=True
-    )
+    fig, axs = plt.subplots(nrows=3, ncols=3, figsize=(15, 15), constrained_layout=True)
     axs = np.array(axs)
     axs[2, 1].set_axis_off()
     axs[2, 2].set_axis_off()
@@ -315,6 +311,7 @@ def shapley_input_vs_class(model, selected, X_test, hist_input):
             color="purple",
             ax=ax,
         )
+    fig.savefig("sv_input-class_dist.png", dpi=100)
     plt.show()
 
 

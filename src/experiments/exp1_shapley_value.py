@@ -167,12 +167,12 @@ def compute(
 
 # First experiment
 
-fig5, axs = plt.subplots(nrows=1, ncols=1, figsize=(8, 6), constrained_layout=True)
+fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(8, 6), constrained_layout=True)
 compute(func=func1, gen=generate1, hist_input=False, b_zero=True, ax=axs)
-fig5.savefig("base_zeros.png", dpi=100)
+fig.savefig("base_zeros.png", dpi=100)
 
 
-fig5, axs = plt.subplots(nrows=2, ncols=2, figsize=(16, 12), constrained_layout=True)
+fig, axs = plt.subplots(nrows=2, ncols=2, figsize=(16, 12), constrained_layout=True)
 compute(
     func=func1,
     gen=generate1,
@@ -205,11 +205,11 @@ compute(
     ax=axs[1, 1],
     title="Inverse proportional baseline",
 )
-fig5.savefig("base.png", dpi=100)
+fig.savefig("base.png", dpi=100)
 
 # Second experiment
 
-fig5, axs = plt.subplots(nrows=2, ncols=2, figsize=(16, 10), constrained_layout=True)
+fig, axs = plt.subplots(nrows=2, ncols=2, figsize=(16, 10), constrained_layout=True)
 compute(
     func=func2,
     gen=generate2,
@@ -242,4 +242,4 @@ compute(
     ax=axs[1, 1],
     title="Inverse proportional baseline",
 )
-fig5.savefig("base2.png", dpi=100)
+fig.savefig("base2.png", dpi=100)

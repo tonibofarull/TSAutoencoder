@@ -76,9 +76,7 @@ def data_bottleneck_exploration(model, X_train):
     _, _, bn = model(X_train, False)
     bn = bn.detach().numpy()
 
-    fig1, axs = plt.subplots(
-        nrows=5, ncols=5, figsize=(25, 20), constrained_layout=True
-    )
+    fig, axs = plt.subplots(nrows=5, ncols=5, figsize=(25, 20), constrained_layout=True)
     axs[4, 4].set_axis_off()
     for i in range(24):
         aux = pd.DataFrame({"x": bn[:, i]})
