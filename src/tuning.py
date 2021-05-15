@@ -7,7 +7,6 @@ import numpy as np
 import ray
 import torch
 from dataloader import ElectricDevices
-from dataloader import normalize
 from hydra.experimental import compose
 from hydra.experimental import initialize
 from models.CAE import CAE
@@ -55,8 +54,8 @@ def main(
 
     alphas = [float(f) for f in np.linspace(0, 1, num_alphas)]
 
-    data_train_ori, data_valid_ori, _ = ElectricDevices()
-    data_train, data_valid = normalize(data_train_ori), normalize(data_valid_ori)
+    dl = ElectricDevices()
+    data_train, data_valid, _ = dl()
     n_valid = data_valid.shape[0]
     data_valid1 = data_valid[: n_valid // 2]
     data_valid2 = data_valid[n_valid // 2 :]

@@ -8,15 +8,12 @@ import numpy as np
 import seaborn as sns
 import torch
 from dataloader import ElectricDevices
-from dataloader import normalize
 from hydra.experimental import compose
-from hydra.experimental import initialize
 from hydra.experimental import initialize_config_dir
 from interpretability import *
 from models.CAE import CAE
 from pingouin import distance_corr  # Szekely and Rizzo
 from sklearn.metrics import confusion_matrix
-from torch import optim
 from train import Trainer
 from utils import baseline
 
@@ -109,6 +106,7 @@ def neuron_max_class(model):
         axs.flat[i].plot(a1)
         axs.flat[i].set_title(f"Representant class {i}")
         axs.flat[i].set_ylim(-0.05, 1.05)
+    plt.show()
 
 
 # Interpretability
@@ -155,12 +153,9 @@ def main():
     with initialize_config_dir(config_dir=os.path.abspath("../src/configs")):
         cfg = compose(config_name="config")
 
-    data_train_ori, data_valid_ori, data_test_ori = ElectricDevices()
-    data_train, data_valid, data_test = (
-        normalize(data_train_ori),
-        normalize(data_valid_ori),
-        normalize(data_test_ori),
-    )
+    dl = ElectricDevices()
+    data_train, data_valid, data_test = dl()
+
     X_train, y_train = data_train[:, :, :-1], data_train[:, :, -1]
     X_valid, y_valid = data_valid[:, :, :-1], data_valid[:, :, -1]
     X_test, y_test = data_test[:, :, :-1], data_test[:, :, -1]
@@ -173,8 +168,6 @@ def main():
 
     reconstruction(X_test, X_testp)
     accuracy(y_test, y_testp)
-
-    # selected = np.random.choice(range(1000), 7)
 
     observation_reconstruction(SELECTED, X_test, X_testp, y_test, y_testp)
 

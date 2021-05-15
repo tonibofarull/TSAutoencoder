@@ -12,7 +12,6 @@ import numpy as np
 import ray
 import torch
 from dataloader import ElectricDevices
-from dataloader import normalize
 from hydra.experimental import compose
 from hydra.experimental import initialize
 from models.CAE import CAE
@@ -115,12 +114,8 @@ def main(num_alphas=21, num_samples=8):
     alphas = [float(f) for f in np.linspace(0, 1, num_alphas)]
     vals = list(product(range(num_alphas), range(num_samples)))
 
-    data_train_ori, data_valid_ori, data_test_ori = ElectricDevices()
-    data_train, data_valid, data_test = (
-        normalize(data_train_ori),
-        normalize(data_valid_ori),
-        normalize(data_test_ori),
-    )
+    dl = ElectricDevices()
+    data_train, data_valid, data_test = dl()
 
     with open("../../exp.json") as f:
         configs = json.load(f)
