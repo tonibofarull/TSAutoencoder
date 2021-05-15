@@ -118,7 +118,7 @@ class CAE(nn.Module):
 
     def loss(self, batch, apply_reg=True):
         X, clss = CAE.split_data(batch)
-        clss = torch.flatten(clss).long()
+        clss = torch.flatten(clss).long()  # class to integer
         pred_X, pred_class, _ = self(X)
         return self.lossf(self, pred_X, X, pred_class, clss, apply_reg)
 

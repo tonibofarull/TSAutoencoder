@@ -150,7 +150,7 @@ def build_argparser():
 def main():
     args = build_argparser().parse_args()
 
-    with initialize_config_dir(config_dir=os.path.abspath("../src/configs")):
+    with initialize_config_dir(config_dir=os.path.abspath("configs")):
         cfg = compose(config_name="config")
 
     dl = ElectricDevices()
@@ -160,7 +160,7 @@ def main():
     X_valid, y_valid = data_valid[:, :, :-1], data_valid[:, :, -1]
     X_test, y_test = data_test[:, :, :-1], data_test[:, :, -1]
 
-    model = CAE(cfg.model, num_classes=7)
+    model = CAE(cfg.model, num_classes=cfg.model.num_classes)
     # torch.save(model.state_dict(), "../weights/mod.pth")
     model.load_state_dict(torch.load("../weights/mod.pth"))
 
@@ -169,14 +169,18 @@ def main():
     reconstruction(X_test, X_testp)
     accuracy(y_test, y_testp)
 
+    # SELECTED = [
+    #     np.random.choice([i for i, x in enumerate(y_test) if int(x) == j])
+    #     for j in range(cfg.model.num_classes)
+    # ]
     observation_reconstruction(SELECTED, X_test, X_testp, y_test, y_testp)
 
     # INTERPRETABILITY
     global_interpretability(model)
 
-    hist_input = [get_hist(X_train[:, 0, i]) for i in range(96)]
+    hist_input = [get_hist(X_train[:, 0, i]) for i in range(cfg.model.length)]
     aux = model.encoder(X_train, False).detach().numpy()
-    hist_bn = [get_hist(aux[:, i]) for i in range(24)]
+    hist_bn = [get_hist(aux[:, i]) for i in range(cfg.model.bottleneck_nn)]
 
     shapley_input_vs_output(model, SELECTED, X_test, hist_input)
     shapley_bottleneck_vs_output(model, SELECTED, X_test, hist_bn)

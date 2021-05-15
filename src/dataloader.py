@@ -30,34 +30,19 @@ class Dataset(abc.ABC):
 
 class ElectricDevices(Dataset):
     def load_data(self):
-        df = pd.read_csv(
-            "../data/ElectricDevices/ElectricDevices_TRAIN.txt",
-            sep="  ",
-            header=None,
-            engine="python",
-        )
-        data_train = (
-            df.iloc[:, list(range(1, df.shape[1])) + [0]]
-            .to_numpy()
-            .reshape(-1, 1, df.shape[1])
+        data_train = ElectricDevices.read_data(
+            "../data/ElectricDevices/ElectricDevices_TRAIN.txt"
         )
         data_train = data_train.astype(np.float32)
         idx = list(range(len(data_train)))
         np.random.shuffle(idx)
         data_train = data_train[idx]
         data_train[:, 0, -1] -= 1
+
         data_train, data_valid = data_train[:-1000, :, :], data_train[-1000:, :, :]
 
-        df = pd.read_csv(
-            "../data/ElectricDevices/ElectricDevices_TEST.txt",
-            sep="  ",
-            header=None,
-            engine="python",
-        )
-        data_test = (
-            df.iloc[:, list(range(1, df.shape[1])) + [0]]
-            .to_numpy()
-            .reshape(-1, 1, df.shape[1])
+        data_test = ElectricDevices.read_data(
+            "../data/ElectricDevices/ElectricDevices_TEST.txt"
         )
         data_test = data_test.astype(np.float32)
         data_test[:, 0, -1] -= 1
@@ -65,3 +50,16 @@ class ElectricDevices(Dataset):
         self.data_train = Dataset.normalize(torch.from_numpy(data_train))
         self.data_valid = Dataset.normalize(torch.from_numpy(data_valid))
         self.data_test = Dataset.normalize(torch.from_numpy(data_test))
+
+    @staticmethod
+    def read_data(file):
+        """
+        Reads data from 'file' and move the index class to the last column
+        """
+        df = pd.read_csv(file, sep="  ", header=None, engine="python")
+        data = (
+            df.iloc[:, list(range(1, df.shape[1])) + [0]]
+            .to_numpy()
+            .reshape(-1, 1, df.shape[1])
+        )
+        return data

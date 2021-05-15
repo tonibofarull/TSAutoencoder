@@ -2,6 +2,7 @@ model:
     M: 4                            # Filters per dilated convolution
     Lf: 3                           # Size of 1D convolution
     length: 96                      # Length of the input Time Series
+    num_classes: 7                  # Number of classes
     bottleneck_nn: 24               # Number of neurons in the bottleneck
 
     lmd: 1.0979131326372968e-05     # Regularization parameter
