@@ -1,12 +1,91 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
-from interpretability import shapley_sampling
+import torch
+from pingouin import distance_corr  # Szekely and Rizzo
 from sklearn.metrics import confusion_matrix
 from sklearn.neighbors import KNeighborsClassifier
 
-# diverging_colors = sns.color_palette("RdBu", 9)
-diverging_colors = sns.color_palette("vlag", as_cmap=True)
+
+def get_predictions(model, X_test):
+    X_testp, outclass_testp, bn = model(X_test, apply_noise=False)
+    X_testp = X_testp.detach().numpy()
+    probs_testp = model.classifier.get_probs(outclass_testp)
+    y_testp = torch.argmax(probs_testp, dim=1).detach().numpy()
+    return X_testp, y_testp
+
+
+def reconstruction(X_test, X_testp):
+    cors = [
+        distance_corr(X_testp[i, 0], X_test[i, 0].detach().numpy(), n_boot=None)
+        for i in range(X_test.shape[0])
+    ]
+    print("Distance Correlation avg and std:", np.mean(cors), np.std(cors))
+    print(
+        "NRMSE:",
+        (
+            torch.sqrt(torch.mean(torch.square(X_test - X_testp)))
+            / (torch.max(X_test) - torch.min(X_test))
+        ).item(),
+    )
+    print()
+
+
+def accuracy(y_test, y_testp):
+    cm = confusion_matrix(y_test, y_testp)
+    sns.heatmap(cm, annot=True, cmap="Blues")
+    plt.xlabel("Predicted label")
+    plt.ylabel("True label")
+    print("Accuracy:", np.sum(np.diag(cm)) / np.sum(cm))
+    plt.show()
+
+
+def observation_reconstruction(selected, X_test, X_testp, y_test, y_testp):
+    fig, axs = plt.subplots(
+        nrows=2, ncols=len(selected), figsize=(25, 5), constrained_layout=True
+    )
+    for i, x in enumerate(selected):
+        axs[0, i].set_title(f"Real class: {int(y_test[x][0])}")
+        axs[0, i].plot(X_test[x, 0])
+        axs[0, i].axis("off")
+        axs[0, i].set_ylim((0, 1))
+
+        axs[1, i].set_title(f"Predicted class: {int(y_testp[x])}")
+        axs[1, i].plot(X_testp[x, 0])
+        axs[1, i].axis("off")
+        axs[1, i].set_ylim((0, 1))
+
+        print("cor:", distance_corr(X_testp[x, 0], X_test[x, 0], n_boot=None))
+    plt.show()
+
+
+# Data exploration
+
+
+def data_input_exploration(X_train):
+    sns.set(font_scale=1.125, style="white")
+
+    ax = sns.histplot(X_train.flatten(), stat="density")
+    ax.set(xlabel="Training input values")
+    plt.plot()
+    # plt.savefig("sv_data-distribution.png", dpi=100)
+
+
+def data_bottleneck_exploration(model, X_train):
+    _, _, bn = model(X_train, False)
+    bn = bn.detach().numpy()
+
+    fig1, axs = plt.subplots(
+        nrows=5, ncols=5, figsize=(25, 20), constrained_layout=True
+    )
+    axs[4, 4].set_axis_off()
+    for i in range(24):
+        aux = pd.DataFrame({"x": bn[:, i]})
+        axs.flat[i].set_title(f"Neuron {i}")
+        sns.histplot(data=aux, x="x", ax=axs.flat[i], kde=True)
+    plt.show()
+    # plt.savefig("sv_data-distribution.png", dpi=100)
 
 
 def baseline(data_train, data_valid, data_test):
@@ -47,197 +126,3 @@ def baseline(data_train, data_valid, data_test):
     plt.xlabel("Predicted label")
     plt.ylabel("True label")
     print("Test acc:", np.sum(np.diag(cm)) / np.sum(cm))
-
-
-def shapley_input_vs_output(model, selected, X_test, hist_input):
-    func = lambda x: model(x.reshape(-1, 1, 96), False)[0][:, 0]
-    f_attrs = lambda inp: np.array(
-        [shapley_sampling(inp, func, j, hist_input) for j in range(model.length)]
-    )
-    attrs = []
-    for i, x in enumerate(selected):
-        print(i)
-        attrs.append(f_attrs(X_test[x, 0]))
-
-    fig1, axs = plt.subplots(
-        nrows=3, ncols=3, figsize=(15, 15), constrained_layout=True
-    )
-    axs = np.array(axs)
-    axs[2, 1].set_axis_off()
-    axs[2, 2].set_axis_off()
-    for i, x in enumerate(selected):
-        ax = sns.heatmap(
-            attrs[i],
-            ax=axs.flatten()[i],
-            center=0,
-            cmap=diverging_colors,
-            cbar_kws={"orientation": "horizontal"},
-        )
-        ax.set(xlabel="Output Time Series", ylabel="Input Time Series")
-
-        ax = axs.flatten()[i].twinx()
-        sns.lineplot(
-            x=range(96), y=X_test[x, 0], label="Original", color="green", ax=ax
-        )
-        sns.lineplot(
-            x=range(96),
-            y=model(X_test[x, 0].reshape(1, 1, -1), False)[0][0, 0].detach().numpy(),
-            label="Predicted",
-            color="purple",
-            ax=ax,
-        )
-        ax.legend()
-    plt.show()
-
-
-def shapley_bottleneck_vs_output(model, selected, X_test, hist_bn):
-    func = lambda x: model.decoder(x)[:, 0, :]
-    f_attrs = lambda inp: np.array(
-        [shapley_sampling(inp, func, j, hist_bn) for j in range(model.bottleneck_nn)]
-    )
-    attrs = []
-    for i, x in enumerate(selected):
-        print(i)
-        inp = model.encoder(X_test[x, 0].reshape(1, 1, -1), False).flatten()
-        attrs.append(f_attrs(inp))
-
-    fig2, axs = plt.subplots(
-        nrows=3, ncols=3, figsize=(15, 15), constrained_layout=True
-    )
-    axs = np.array(axs)
-    axs[2, 1].set_axis_off()
-    axs[2, 2].set_axis_off()
-    for i, x in enumerate(selected):
-        ax = sns.heatmap(
-            attrs[i],
-            ax=axs.flatten()[i],
-            center=0,
-            cmap=diverging_colors,
-            cbar_kws={"orientation": "horizontal"},
-        )
-        ax.set(xlabel="Output Time Series", ylabel="Input Bottleneck")
-
-        ax = axs.flatten()[i].twinx()
-        sns.lineplot(
-            x=range(96), y=X_test[x, 0], label="Original", color="green", ax=ax
-        )
-        sns.lineplot(
-            x=range(96),
-            y=model(X_test[x, 0].reshape(1, 1, -1), False)[0][0, 0].detach().numpy(),
-            label="Predicted",
-            color="purple",
-            ax=ax,
-        )
-        ax.legend()
-    plt.show()
-
-
-def shapley_input_vs_bottleneck(model, selected, X_test, hist_input):
-    func = lambda x: model.encoder(x.reshape(-1, 1, 96), False)
-    f_attrs = lambda inp: np.array(
-        [shapley_sampling(inp, func, j, hist_input) for j in range(model.length)]
-    ).T
-    attrs = []
-    for i, x in enumerate(selected):
-        print(i)
-        inp = X_test[x, 0]
-        attrs.append(f_attrs(inp))
-
-    fig3, axs = plt.subplots(
-        nrows=3, ncols=3, figsize=(15, 15), constrained_layout=True
-    )
-    axs = np.array(axs)
-    axs[2, 1].set_axis_off()
-    axs[2, 2].set_axis_off()
-    for i, x in enumerate(selected):
-        ax = sns.heatmap(
-            attrs[i],
-            ax=axs.flatten()[i],
-            center=0,
-            cmap=diverging_colors,
-            cbar_kws={"orientation": "horizontal"},
-        )
-        ax.set(xlabel="Input Time Series", ylabel="Output Bottleneck")
-
-        ax = axs.flatten()[i].twinx()
-        sns.lineplot(
-            x=range(96), y=X_test[x, 0], label="Original", color="green", ax=ax
-        )
-        sns.lineplot(
-            x=range(96),
-            y=model(X_test[x, 0].reshape(1, 1, -1), False)[0][0, 0].detach().numpy(),
-            label="Predicted",
-            color="purple",
-            ax=ax,
-        )
-    plt.show()
-
-
-def shapley_bottleneck_vs_class(model, selected, X_test, hist_bn):
-    func = lambda x: model.classifier.get_probs(model.classifier(x.reshape(-1, 24)))
-    f_attrs = lambda inp: np.array(
-        [shapley_sampling(inp, func, j, hist_bn) for j in range(model.bottleneck_nn)]
-    )
-    attrs = []
-    for i, x in enumerate(selected):
-        print(i)
-        inp = model.encoder(X_test[x, 0].reshape(1, 1, -1), False).flatten()
-        attrs.append(f_attrs(inp))
-
-    fig4, axs = plt.subplots(nrows=3, ncols=3, figsize=(8, 8), constrained_layout=True)
-    axs = np.array(axs)
-    axs[2, 1].set_axis_off()
-    axs[2, 2].set_axis_off()
-    for i, x in enumerate(selected):
-        ax = sns.heatmap(
-            attrs[i],
-            ax=axs.flatten()[i],
-            center=0,
-            cmap=diverging_colors,
-            cbar_kws={"orientation": "horizontal"},
-        )
-        ax.set(xlabel="Output Class", ylabel="Input Bottleneck")
-    plt.show()
-
-
-def shapley_input_vs_class(model, selected, X_test, hist_input):
-    func = lambda x: model.classifier.get_probs(
-        model.classifier(model.encoder(x.reshape(-1, 1, 96), False))
-    )
-    f_attrs = lambda inp: np.array(
-        [shapley_sampling(inp, func, j, hist_input) for j in range(model.length)]
-    ).T
-    attrs = []
-    for i, x in enumerate(selected):
-        print(i)
-        inp = X_test[x, 0]
-        attrs.append(f_attrs(inp))
-
-    fig5, axs = plt.subplots(
-        nrows=3, ncols=3, figsize=(15, 15), constrained_layout=True
-    )
-    axs = np.array(axs)
-    axs[2, 1].set_axis_off()
-    axs[2, 2].set_axis_off()
-    for i, x in enumerate(selected):
-        ax = sns.heatmap(
-            attrs[i],
-            ax=axs.flatten()[i],
-            center=0,
-            cmap=diverging_colors,
-            cbar_kws={"orientation": "horizontal"},
-        )
-        ax.set(xlabel="Input Time Series", ylabel="Output Bottleneck")
-
-        ax = axs.flatten()[i].twinx()
-        sns.lineplot(
-            x=range(96), y=X_test[x, 0], label="Original", color="green", ax=ax
-        )
-        sns.lineplot(
-            x=range(96),
-            y=model(X_test[x, 0].reshape(1, 1, -1), False)[0][0, 0].detach().numpy(),
-            label="Predicted",
-            color="purple",
-            ax=ax,
-        )
-    plt.show()

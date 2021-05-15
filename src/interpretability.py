@@ -1,6 +1,11 @@
+import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
 import torch
 from torch import optim
+
+# diverging_colors = sns.color_palette("RdBu", 9)
+diverging_colors = sns.color_palette("vlag", as_cmap=True)
 
 
 def get_hist(x, alpha=1):
@@ -25,7 +30,37 @@ def sample_from_hist(hist, size=1):
     return np.array((1 - pos) * lows + pos * highs)
 
 
-# Shapley Values
+"""
+Global interpretability
+"""
+
+
+def global_interpretability(model):
+    num_filter = model.k * model.M
+    w_per_filter = model.length
+    num_neurons = model.bottleneck_nn
+    M = model.M
+
+    weights = model.encoder.fc_conv_bn.weight
+    heatmap = [
+        [
+            torch.mean(
+                torch.abs(weights[j, i * w_per_filter : (i + 1) * w_per_filter])
+            ).item()
+            for i in range(num_filter)
+        ]
+        for j in range(num_neurons)
+    ]
+    heatmap = np.array(heatmap)
+    x_axis_labels = [f"{i}-d:{model.dilation[i//M]}" for i in range(heatmap.shape[1])]
+
+    _ = sns.heatmap(heatmap, xticklabels=x_axis_labels, cmap="gray", vmin=0)
+    plt.show()
+
+
+"""
+Local interpretability
+"""
 
 
 def shapley_sampling(
@@ -86,7 +121,206 @@ def shapley_sampling(
     return phis
 
 
-# Feature Visualization
+# Shapley Values for different combinations of input, bottleneck, ouput and class prediction
+
+
+def shapley_input_vs_output(model, selected, X_test, hist_input):
+    func = lambda x: model(x.reshape(-1, 1, 96), False)[0][:, 0]
+    f_attrs = lambda inp: np.array(
+        [shapley_sampling(inp, func, j, hist_input) for j in range(model.length)]
+    )
+    attrs = []
+    for i, x in enumerate(selected):
+        print(i)
+        attrs.append(f_attrs(X_test[x, 0]))
+
+    fig1, axs = plt.subplots(
+        nrows=3, ncols=3, figsize=(15, 15), constrained_layout=True
+    )
+    axs = np.array(axs)
+    axs[2, 1].set_axis_off()
+    axs[2, 2].set_axis_off()
+    for i, x in enumerate(selected):
+        ax = sns.heatmap(
+            attrs[i],
+            ax=axs.flatten()[i],
+            center=0,
+            cmap=diverging_colors,
+            cbar_kws={"orientation": "horizontal"},
+        )
+        ax.set(xlabel="Output Time Series", ylabel="Input Time Series")
+
+        ax = axs.flatten()[i].twinx()
+        sns.lineplot(
+            x=range(96), y=X_test[x, 0], label="Original", color="green", ax=ax
+        )
+        sns.lineplot(
+            x=range(96),
+            y=model(X_test[x, 0].reshape(1, 1, -1), False)[0][0, 0].detach().numpy(),
+            label="Predicted",
+            color="purple",
+            ax=ax,
+        )
+        ax.legend()
+    plt.show()
+
+
+def shapley_bottleneck_vs_output(model, selected, X_test, hist_bn):
+    func = lambda x: model.decoder(x)[:, 0, :]
+    f_attrs = lambda inp: np.array(
+        [shapley_sampling(inp, func, j, hist_bn) for j in range(model.bottleneck_nn)]
+    )
+    attrs = []
+    for i, x in enumerate(selected):
+        print(i)
+        inp = model.encoder(X_test[x, 0].reshape(1, 1, -1), False).flatten()
+        attrs.append(f_attrs(inp))
+
+    fig2, axs = plt.subplots(
+        nrows=3, ncols=3, figsize=(15, 15), constrained_layout=True
+    )
+    axs = np.array(axs)
+    axs[2, 1].set_axis_off()
+    axs[2, 2].set_axis_off()
+    for i, x in enumerate(selected):
+        ax = sns.heatmap(
+            attrs[i],
+            ax=axs.flatten()[i],
+            center=0,
+            cmap=diverging_colors,
+            cbar_kws={"orientation": "horizontal"},
+        )
+        ax.set(xlabel="Output Time Series", ylabel="Input Bottleneck")
+
+        ax = axs.flatten()[i].twinx()
+        sns.lineplot(
+            x=range(96), y=X_test[x, 0], label="Original", color="green", ax=ax
+        )
+        sns.lineplot(
+            x=range(96),
+            y=model(X_test[x, 0].reshape(1, 1, -1), False)[0][0, 0].detach().numpy(),
+            label="Predicted",
+            color="purple",
+            ax=ax,
+        )
+        ax.legend()
+    plt.show()
+
+
+def shapley_input_vs_bottleneck(model, selected, X_test, hist_input):
+    func = lambda x: model.encoder(x.reshape(-1, 1, 96), False)
+    f_attrs = lambda inp: np.array(
+        [shapley_sampling(inp, func, j, hist_input) for j in range(model.length)]
+    ).T
+    attrs = []
+    for i, x in enumerate(selected):
+        print(i)
+        inp = X_test[x, 0]
+        attrs.append(f_attrs(inp))
+
+    fig3, axs = plt.subplots(
+        nrows=3, ncols=3, figsize=(15, 15), constrained_layout=True
+    )
+    axs = np.array(axs)
+    axs[2, 1].set_axis_off()
+    axs[2, 2].set_axis_off()
+    for i, x in enumerate(selected):
+        ax = sns.heatmap(
+            attrs[i],
+            ax=axs.flatten()[i],
+            center=0,
+            cmap=diverging_colors,
+            cbar_kws={"orientation": "horizontal"},
+        )
+        ax.set(xlabel="Input Time Series", ylabel="Output Bottleneck")
+
+        ax = axs.flatten()[i].twinx()
+        sns.lineplot(
+            x=range(96), y=X_test[x, 0], label="Original", color="green", ax=ax
+        )
+        sns.lineplot(
+            x=range(96),
+            y=model(X_test[x, 0].reshape(1, 1, -1), False)[0][0, 0].detach().numpy(),
+            label="Predicted",
+            color="purple",
+            ax=ax,
+        )
+    plt.show()
+
+
+def shapley_bottleneck_vs_class(model, selected, X_test, hist_bn):
+    func = lambda x: model.classifier.get_probs(model.classifier(x.reshape(-1, 24)))
+    f_attrs = lambda inp: np.array(
+        [shapley_sampling(inp, func, j, hist_bn) for j in range(model.bottleneck_nn)]
+    )
+    attrs = []
+    for i, x in enumerate(selected):
+        print(i)
+        inp = model.encoder(X_test[x, 0].reshape(1, 1, -1), False).flatten()
+        attrs.append(f_attrs(inp))
+
+    fig4, axs = plt.subplots(nrows=3, ncols=3, figsize=(8, 8), constrained_layout=True)
+    axs = np.array(axs)
+    axs[2, 1].set_axis_off()
+    axs[2, 2].set_axis_off()
+    for i, x in enumerate(selected):
+        ax = sns.heatmap(
+            attrs[i],
+            ax=axs.flatten()[i],
+            center=0,
+            cmap=diverging_colors,
+            cbar_kws={"orientation": "horizontal"},
+        )
+        ax.set(xlabel="Output Class", ylabel="Input Bottleneck")
+    plt.show()
+
+
+def shapley_input_vs_class(model, selected, X_test, hist_input):
+    func = lambda x: model.classifier.get_probs(
+        model.classifier(model.encoder(x.reshape(-1, 1, 96), False))
+    )
+    f_attrs = lambda inp: np.array(
+        [shapley_sampling(inp, func, j, hist_input) for j in range(model.length)]
+    ).T
+    attrs = []
+    for i, x in enumerate(selected):
+        print(i)
+        inp = X_test[x, 0]
+        attrs.append(f_attrs(inp))
+
+    fig5, axs = plt.subplots(
+        nrows=3, ncols=3, figsize=(15, 15), constrained_layout=True
+    )
+    axs = np.array(axs)
+    axs[2, 1].set_axis_off()
+    axs[2, 2].set_axis_off()
+    for i, x in enumerate(selected):
+        ax = sns.heatmap(
+            attrs[i],
+            ax=axs.flatten()[i],
+            center=0,
+            cmap=diverging_colors,
+            cbar_kws={"orientation": "horizontal"},
+        )
+        ax.set(xlabel="Input Time Series", ylabel="Output Bottleneck")
+
+        ax = axs.flatten()[i].twinx()
+        sns.lineplot(
+            x=range(96), y=X_test[x, 0], label="Original", color="green", ax=ax
+        )
+        sns.lineplot(
+            x=range(96),
+            y=model(X_test[x, 0].reshape(1, 1, -1), False)[0][0, 0].detach().numpy(),
+            label="Predicted",
+            color="purple",
+            ax=ax,
+        )
+    plt.show()
+
+
+"""
+Feature Visualization
+"""
 
 
 def feature_visualization(model, position, sel):
@@ -107,3 +341,26 @@ def feature_visualization(model, position, sel):
     for i in range(100):
         optimizer.step(closure)
     return torch.sigmoid(X).detach().numpy().flatten()
+
+
+# Feature visualization of input with respect the bottleneck and bottleneck with respect to the class
+
+
+def input_max_neuron(model):
+    for i in range(24):
+        a1 = feature_visualization(model, i, 2)
+        plt.plot(a1, "o-")
+        plt.title(f"Neuron {i}")
+        plt.ylim(-0.05, 1.05)
+        plt.savefig(f"../plots/{i}.png")
+        plt.close()
+
+
+def neuron_max_class(model):
+    fig, axs = plt.subplots(nrows=2, ncols=4, figsize=(25, 10), constrained_layout=True)
+    for i in range(7):  # selected):
+        a1 = feature_visualization(model, i, 1)
+        axs.flat[i].plot(a1)
+        axs.flat[i].set_title(f"Representant class {i}")
+        axs.flat[i].set_ylim(-0.05, 1.05)
+    plt.show()

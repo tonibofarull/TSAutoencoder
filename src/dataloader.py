@@ -6,6 +6,11 @@ import torch
 
 
 class Dataset(abc.ABC):
+    """
+    Base class for Dataset
+    Custom class that a dataset has to inherit and implement its abstract methods
+    """
+
     def __init__(self):
         self.data_train = None
         self.data_valid = None
@@ -14,6 +19,15 @@ class Dataset(abc.ABC):
 
     @abc.abstractmethod
     def load_data(self):
+        """
+        Load training, validation and testing and update:
+        - self.data_train
+        - self.data_valid
+        - self.data_test
+
+        Each variable has the shape (N, 1, length+1) where 'length' represents the length of the time series
+        and the last column represents the class of the observation, starting from 0.
+        """
         pass
 
     @staticmethod
@@ -54,7 +68,7 @@ class ElectricDevices(Dataset):
     @staticmethod
     def read_data(file):
         """
-        Reads data from 'file' and move the index class to the last column
+        Reads data from 'file' and move the class index to the last column
         """
         df = pd.read_csv(file, sep="  ", header=None, engine="python")
         data = (
