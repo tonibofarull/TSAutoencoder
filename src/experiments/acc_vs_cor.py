@@ -1,26 +1,24 @@
-import random
-import torch
-import numpy as np
-
-from models.CAE import CAE
-from train import Trainer
-from dataloader import ElectricDevices, normalize
-
-import hydra
-from hydra.experimental import initialize, compose
-
-import ray
-
 import argparse
 import json
 import pickle
+import random
 import time
 from datetime import datetime
-
-from sklearn.metrics import confusion_matrix
-from pingouin import distance_corr
-import matplotlib.pyplot as plt
 from itertools import product
+
+import hydra
+import matplotlib.pyplot as plt
+import numpy as np
+import ray
+import torch
+from dataloader import ElectricDevices
+from dataloader import normalize
+from hydra.experimental import compose
+from hydra.experimental import initialize
+from models.CAE import CAE
+from pingouin import distance_corr
+from sklearn.metrics import confusion_matrix
+from train import Trainer
 
 random.seed(0)  # Not needed
 np.random.seed(0)
@@ -124,7 +122,7 @@ def main(num_alphas=21, num_samples=8):
         normalize(data_test_ori),
     )
 
-    with open("../../exp.json", "r") as f:
+    with open("../../exp.json") as f:
         configs = json.load(f)
 
     with initialize(config_path="configs"):

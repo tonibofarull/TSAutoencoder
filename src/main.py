@@ -1,23 +1,24 @@
 import argparse
-import torch
-from torch import optim
-import matplotlib.pyplot as plt
-import numpy as np
-import seaborn as sns
-from sklearn.metrics import confusion_matrix
 import os
 import random
 
-from models.CAE import CAE
-from train import Trainer
-from interpretability import *
-from dataloader import ElectricDevices, normalize
-from utils import baseline
-
-from pingouin import distance_corr  # Szekely and Rizzo
-
 import hydra
-from hydra.experimental import initialize, initialize_config_dir, compose
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+import torch
+from dataloader import ElectricDevices
+from dataloader import normalize
+from hydra.experimental import compose
+from hydra.experimental import initialize
+from hydra.experimental import initialize_config_dir
+from interpretability import *
+from models.CAE import CAE
+from pingouin import distance_corr  # Szekely and Rizzo
+from sklearn.metrics import confusion_matrix
+from torch import optim
+from train import Trainer
+from utils import baseline
 
 torch.manual_seed(4444)
 np.random.seed(4444)

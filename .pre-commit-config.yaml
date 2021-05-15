@@ -1,5 +1,21 @@
 repos:
--   repo: https://github.com/ambv/black
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.4.0
+    hooks:
+    -   id: trailing-whitespace
+    -   id: requirements-txt-fixer
+    -   id: end-of-file-fixer
+-   repo: https://github.com/asottile/pyupgrade
+    rev: v2.7.4
+    hooks:
+    -   id: pyupgrade
+        args: ["--py37-plus"]
+-   repo: https://github.com/asottile/reorder_python_imports
+    rev: v2.3.6
+    hooks:
+    -   id: reorder-python-imports
+        args: ["--py37-plus"]
+-   repo: https://github.com/psf/black
     rev: 21.5b1
     hooks:
     - id: black

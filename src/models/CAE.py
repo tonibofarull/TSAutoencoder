@@ -1,7 +1,7 @@
 import torch
-from torch import nn
 import torch.nn.functional as F
 from models.losses import CAELoss
+from torch import nn
 
 
 class Encoder(nn.Module):

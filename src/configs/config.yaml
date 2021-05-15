@@ -11,7 +11,7 @@ train:
     verbose: True                   # Shows details about the training
     shuffle: True                   # Shuffles the training data after each epoch
     batch_size: 64                  # Batch size
-    
+
     iters: 300                      # Number of maximum iterations
     early_stopping_rounds: 23       # Number of rounds without improvement before stopping
     lr: 0.001706322160346846        # Learning rate

@@ -1,20 +1,19 @@
-import random
-import torch
-import numpy as np
-
-from models.CAE import CAE
-from train import Trainer
-from dataloader import ElectricDevices, normalize
-
-import hydra
-from hydra.experimental import initialize, compose
-
-import ray
-from ray import tune
-from ray.tune.suggest.hyperopt import HyperOptSearch
-
 import argparse
 import json
+import random
+
+import hydra
+import numpy as np
+import ray
+import torch
+from dataloader import ElectricDevices
+from dataloader import normalize
+from hydra.experimental import compose
+from hydra.experimental import initialize
+from models.CAE import CAE
+from ray import tune
+from ray.tune.suggest.hyperopt import HyperOptSearch
+from train import Trainer
 
 random.seed(0)  # Seed for the hyperparameter selection
 np.random.seed(0)

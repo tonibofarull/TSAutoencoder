@@ -1,5 +1,5 @@
 # Autoencoder
- 
+
 Implementation of a Convolutional Autoencoder for univariate Time Series.
 
 ## Requirements

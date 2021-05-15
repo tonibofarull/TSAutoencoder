@@ -1,11 +1,9 @@
-import numpy as np
-
-from sklearn.metrics import confusion_matrix
-from sklearn.neighbors import KNeighborsClassifier
-
 import matplotlib.pyplot as plt
+import numpy as np
 import seaborn as sns
 from interpretability import shapley_sampling
+from sklearn.metrics import confusion_matrix
+from sklearn.neighbors import KNeighborsClassifier
 
 # diverging_colors = sns.color_palette("RdBu", 9)
 diverging_colors = sns.color_palette("vlag", as_cmap=True)
