@@ -135,6 +135,37 @@ def global_interpretability(model):
     plt.show()
 
 
+# Data exploration
+
+
+def data_input_exploration(X_train):
+    sns.set(font_scale=1.125, style="white")
+
+    ax = sns.histplot(X_train.flatten(), stat="density")
+    ax.set(xlabel="Training input values")
+    # plt.savefig("sv_data-distribution.png", dpi=100)
+
+
+def data_bottleneck_exploration(model, X_train, y_train):
+    _, _, bn = model(X_train, False)
+    bn = bn.detach().numpy()
+    y_train_np = np.array(y_train, dtype=np.int8).flatten()
+
+    baselines = np.mean(
+        bn, axis=0
+    )  # mean value of each neuron on the whole training dataset
+
+    fig1, axs = plt.subplots(
+        nrows=5, ncols=5, figsize=(25, 20), constrained_layout=True
+    )
+    axs[4, 4].set_axis_off()
+    for i in range(24):
+        aux = pd.DataFrame({"x": bn[:, i]})
+        axs.flat[i].set_title(f"Neuron {i}")
+        sns.histplot(data=aux, x="x", ax=axs.flat[i], kde=True)
+    plt.savefig("sv_data-distribution.png", dpi=100)
+
+
 # Main
 
 
