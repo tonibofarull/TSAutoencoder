@@ -51,12 +51,12 @@ def observation_reconstruction(selected, X_test, X_testp, y_test, y_testp):
         axs[0, i].axis("off")
         axs[0, i].set_ylim((0, 1))
 
-        axs[1, i].set_title(f"Predicted class: {int(y_testp[x])}")
+        axs[1, i].set_title(
+            f"Predicted class: {int(y_testp[x])} Cor: {distance_corr(X_testp[x, 0], X_test[x, 0], n_boot=None):.3f}"
+        )
         axs[1, i].plot(X_testp[x, 0])
         axs[1, i].axis("off")
         axs[1, i].set_ylim((0, 1))
-
-        print("cor:", distance_corr(X_testp[x, 0], X_test[x, 0], n_boot=None))
     plt.show()
 
 

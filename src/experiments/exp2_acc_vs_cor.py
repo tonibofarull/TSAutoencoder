@@ -67,9 +67,6 @@ def acc_cor(inp, data, cfg, configs):
 
 
 def print_results(res, alphas, num_samples):
-    with open("../../res", "wb") as f:
-        pickle.dump(res, f)
-
     print(res)
     num_alphas = len(alphas)
     accs = [
@@ -101,7 +98,7 @@ def print_results(res, alphas, num_samples):
 
     plt.legend()
     plt.xlabel("alpha")
-    plt.savefig("../../alpha-cor_acc.png")
+    plt.savefig("alpha-cor_acc.png", dpi=100)
 
 
 def main(num_alphas=21, num_samples=8):
@@ -117,7 +114,7 @@ def main(num_alphas=21, num_samples=8):
     dl = ElectricDevices()
     data_train, data_valid, data_test = dl()
 
-    with open("../../exp.json") as f:
+    with open("tuning.json") as f:
         configs = json.load(f)
 
     with initialize(config_path="configs"):

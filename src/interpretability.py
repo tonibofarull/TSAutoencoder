@@ -1,3 +1,5 @@
+import os
+
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -131,7 +133,7 @@ def shapley_input_vs_output(model, selected, X_test, hist_input):
     )
     attrs = []
     for i, x in enumerate(selected):
-        print(i)
+        print(i, end=" ")
         attrs.append(f_attrs(X_test[x, 0]))
 
     fig, axs = plt.subplots(nrows=3, ncols=3, figsize=(15, 15), constrained_layout=True)
@@ -171,7 +173,7 @@ def shapley_bottleneck_vs_output(model, selected, X_test, hist_bn):
     )
     attrs = []
     for i, x in enumerate(selected):
-        print(i)
+        print(i, end=" ")
         inp = model.encoder(X_test[x, 0].reshape(1, 1, -1), False).flatten()
         attrs.append(f_attrs(inp))
 
@@ -212,7 +214,7 @@ def shapley_input_vs_bottleneck(model, selected, X_test, hist_input):
     ).T
     attrs = []
     for i, x in enumerate(selected):
-        print(i)
+        print(i, end=" ")
         inp = X_test[x, 0]
         attrs.append(f_attrs(inp))
 
@@ -252,7 +254,7 @@ def shapley_bottleneck_vs_class(model, selected, X_test, hist_bn):
     )
     attrs = []
     for i, x in enumerate(selected):
-        print(i)
+        print(i, end=" ")
         inp = model.encoder(X_test[x, 0].reshape(1, 1, -1), False).flatten()
         attrs.append(f_attrs(inp))
 
@@ -282,7 +284,7 @@ def shapley_input_vs_class(model, selected, X_test, hist_input):
     ).T
     attrs = []
     for i, x in enumerate(selected):
-        print(i)
+        print(i, end=" ")
         inp = X_test[x, 0]
         attrs.append(f_attrs(inp))
 
@@ -335,7 +337,7 @@ def feature_visualization(model, position, sel):
         y.backward()
         return y
 
-    for i in range(100):
+    for _ in range(100):
         optimizer.step(closure)
     return torch.sigmoid(X).detach().numpy().flatten()
 
@@ -344,20 +346,27 @@ def feature_visualization(model, position, sel):
 
 
 def input_max_neuron(model):
+    folder = "feature_visualization/input_max_neuron"
+    os.makedirs(folder, exist_ok=True)
+
     for i in range(24):
         a1 = feature_visualization(model, i, 2)
-        plt.plot(a1, "o-")
+        plt.plot(a1)
         plt.title(f"Neuron {i}")
         plt.ylim(-0.05, 1.05)
-        plt.savefig(f"../plots/{i}.png")
+        plt.savefig(f"{folder}/{i}.png", dpi=100)
         plt.close()
 
 
 def neuron_max_class(model):
+    folder = "feature_visualization"
+    os.makedirs(folder, exist_ok=True)
+
     fig, axs = plt.subplots(nrows=2, ncols=4, figsize=(25, 10), constrained_layout=True)
     for i in range(7):  # selected):
         a1 = feature_visualization(model, i, 1)
         axs.flat[i].plot(a1)
         axs.flat[i].set_title(f"Representant class {i}")
         axs.flat[i].set_ylim(-0.05, 1.05)
+    plt.savefig(f"{folder}/neuron_max_class.png", dpi=100)
     plt.show()

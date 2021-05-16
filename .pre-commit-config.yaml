@@ -4,7 +4,6 @@ repos:
     hooks:
     -   id: trailing-whitespace
     -   id: requirements-txt-fixer
-    -   id: end-of-file-fixer
 -   repo: https://github.com/asottile/pyupgrade
     rev: v2.7.4
     hooks:

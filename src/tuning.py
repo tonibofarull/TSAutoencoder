@@ -47,10 +47,12 @@ def main(
     },
 ):
     parser = argparse.ArgumentParser()
-    parser.add_argument("--num-cpus", type=int)
+    parser.add_argument("--num_cpus", type=int)
     args = parser.parse_args()
 
+    print("Initializating...")
     ray.init(include_dashboard=False, num_cpus=args.num_cpus)
+    print("Done.")
 
     alphas = [float(f) for f in np.linspace(0, 1, num_alphas)]
 
@@ -87,7 +89,7 @@ def main(
         best_config = analysis.get_best_config(metric="loss", mode="min")
 
         results.update({exp: {"alpha": alpha, "hyperparams": best_config}})
-        with open("../../exp.json", "w") as f:
+        with open("tuning.json", "w") as f:
             json.dump(results, f, indent=4)
 
         print("Best config: ", best_config)
