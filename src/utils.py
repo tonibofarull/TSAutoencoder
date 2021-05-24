@@ -34,10 +34,11 @@ def reconstruction(X_test, X_testp):
 
 def accuracy(y_test, y_testp):
     cm = confusion_matrix(y_test, y_testp)
-    sns.heatmap(cm, annot=True, cmap="Blues")
+    sns.heatmap(cm, annot=False, cmap="Blues")
     plt.xlabel("Predicted label")
     plt.ylabel("True label")
     print("Accuracy:", np.sum(np.diag(cm)) / np.sum(cm))
+    plt.savefig("accuracy.png", dpi=100)
     plt.show()
 
 

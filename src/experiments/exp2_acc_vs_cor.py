@@ -100,21 +100,23 @@ def print_results(res, alphas, num_samples):
     plt.savefig("alpha-cor_acc.png", dpi=100)
 
 
-def main(num_alphas=21, num_samples=8):
+def main(
+    dl=ElectricDevices(),
+    alphas=[float(f) for f in np.linspace(0, 1, 21)],
+    num_samples=8
+):
     parser = argparse.ArgumentParser()
     parser.add_argument("--num-cpus", type=int)
-    parser.add_argument("--output", default="tuning.json", help="json with stored results.")
+    parser.add_argument("--json", default="tuning.json", help="json with stored results.")
     args = parser.parse_args()
 
     ray.init(include_dashboard=False, num_cpus=args.num_cpus)
 
-    alphas = [float(f) for f in np.linspace(0, 1, num_alphas)]
-    vals = list(product(range(num_alphas), range(num_samples)))
+    vals = list(product(range(len(alphas)), range(num_samples)))
 
-    dl = ElectricDevices()
     data_train, data_valid, data_test = dl()
 
-    with open(args.output) as f:
+    with open(args.json) as f:
         configs = json.load(f)
 
     with initialize(config_path="configs"):
