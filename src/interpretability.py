@@ -57,6 +57,8 @@ def global_interpretability(model):
     x_axis_labels = [f"{i}-d:{model.dilation[i//M]}" for i in range(heatmap.shape[1])]
 
     _ = sns.heatmap(heatmap, xticklabels=x_axis_labels, cmap="gray", vmin=0)
+    plt.gcf().subplots_adjust(bottom=0.2)
+    plt.savefig("global_interpretability.png", dpi=100)
     plt.show()
 
 

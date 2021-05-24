@@ -39,7 +39,7 @@ def acc_cor(inp, data, cfg, configs):
     cfg.train.lr = config["hyperparams"]["lr"]
     cfg.train.early_stopping_rounds = config["hyperparams"]["early_stopping_rounds"]
 
-    model = CAE(cfg.model, num_classes=7)
+    model = CAE(cfg.model)
     trainer = Trainer(cfg.train)
     trainer.fit(model, data_train, data_valid)
 

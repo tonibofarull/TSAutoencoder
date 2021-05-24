@@ -84,18 +84,19 @@ class ARMA(Dataset):
     def load_data(self, n=900, L=96):
         data = None
         if self.case == 1:
-            data = np.c_[ARMA.arma(n, L, [0.6], [0.05]), np.zeros(n)]
+            data = np.c_[ARMA.arma(n, L, [0, 0.75], [0, 0.35]), np.zeros(n)]
         elif self.case == 2:
-            data = np.c_[ARMA.arma(n, L, [0, 0.6], [0, 0.05]), np.zeros(n)]
+            data = np.c_[ARMA.arma(n, L, [0, 0, 0.75], [0, 0, 0.35]), np.zeros(n)]
         elif self.case == 3:
-            data = np.c_[ARMA.arma(n, L, [0, 0, 0, 0.6], [0, 0, 0, 0.05]), np.zeros(n)]
+            data = np.c_[ARMA.arma(n, L, [0, 0, 0, 0, 0.75], [0, 0, 0, 0, 0.35]), np.zeros(n)]
         elif self.case == 4:
-            data = np.c_[ARMA.arma(n, L, [0, 0, 0, 0, 0, 0, 0, 0.6], [0, 0, 0, 0, 0, 0, 0, 0.05]), np.zeros(n)]
+            data = np.c_[ARMA.arma(n, L, [0, 0, 0, 0, 0, 0, 0.75], [0, 0, 0, 0, 0, 0, 0.35]), np.zeros(n)]
         else:
             data = np.r_[
-                np.c_[ARMA.arma(900, 96, [0, -0.5], [0, 0.1]), np.zeros(n)], 
-                np.c_[ARMA.arma(900, 96, [0, 0, 0.7], [0, 0, 0.05]), np.ones(n)],
-                np.c_[ARMA.arma(900, 96, [0, 0, 0, 0, -0.6], [0, 0, 0, 0, 0.2]), np.ones(n)*2]
+                np.c_[ARMA.arma(n, L, [0, 0.75], [0, 0.35]), np.zeros(n)], 
+                np.c_[ARMA.arma(n, L, [0, 0, 0.75], [0, 0, 0.35]), np.ones(n)],
+                np.c_[ARMA.arma(n, L, [0, 0, 0, 0, 0.75], [0, 0, 0, 0, 0.35]), np.ones(n)*2],
+                np.c_[ARMA.arma(n, L, [0, 0, 0, 0, 0, 0, 0.75], [0, 0, 0, 0, 0, 0, 0.35]), np.ones(n)*3]
             ]
 
         np.random.shuffle(data)

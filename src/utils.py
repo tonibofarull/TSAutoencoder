@@ -43,21 +43,21 @@ def accuracy(y_test, y_testp):
 
 def observation_reconstruction(selected, X_test, X_testp, y_test, y_testp):
     fig, axs = plt.subplots(
-        nrows=2, ncols=len(selected), figsize=(25, 5), constrained_layout=True
+        nrows=3, ncols=int(np.ceil(len(selected)/3)), figsize=(15, 11), constrained_layout=True
     )
-    axs = np.array(axs).reshape(2, -1)
+    axs = np.array(axs).reshape(3, -1)
     for i, x in enumerate(selected):
-        axs[0, i].set_title(f"Real class: {int(y_test[x][0])}")
-        axs[0, i].plot(X_test[x, 0])
-        axs[0, i].axis("off")
-        axs[0, i].set_ylim((0, 1))
-
-        axs[1, i].set_title(
-            f"Predicted class: {int(y_testp[x])} Cor: {distance_corr(X_testp[x, 0], X_test[x, 0], n_boot=None):.3f}"
+        sns.lineplot(
+            x=range(96), y=X_test[x, 0], label="Original", color="green", ax=axs.flatten()[i]
         )
-        axs[1, i].plot(X_testp[x, 0])
-        axs[1, i].axis("off")
-        axs[1, i].set_ylim((0, 1))
+        sns.lineplot(
+            x=range(96),
+            y=X_testp[x, 0],
+            label="Predicted",
+            color="purple",
+            ax=axs.flatten()[i],
+        )
+    plt.savefig("reconstruction.png", dpi=100)
     plt.show()
 
 

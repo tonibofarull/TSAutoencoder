@@ -30,7 +30,7 @@ def objective(config, data, cfg, checkpoint_dir=None):
     cfg.train.lr = config["lr"]
     cfg.train.early_stopping_rounds = config["early_stopping_rounds"]
     # END
-    model = CAE(cfg.model, num_classes=cfg.model.num_classes)
+    model = CAE(cfg.model)
     trainer = Trainer(cfg.train)
     trainer.fit(model, data_train, data_valid1)
     loss = model.loss(data_valid2, apply_reg=False).item()
