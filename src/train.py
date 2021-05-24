@@ -17,12 +17,12 @@ class Trainer:
 
         self.restore_best_weights = restore_best_weights
 
-    def fit(self, model, X_train, X_valid):
+    def fit(self, model, data_train, data_valid):
         # Datasets and optimizer
         trainloader = DataLoader(
-            X_train, batch_size=self.batch_size, shuffle=self.shuffle
+            data_train, batch_size=self.batch_size, shuffle=self.shuffle
         )
-        validloader = DataLoader(X_valid, batch_size=self.batch_size)
+        validloader = DataLoader(data_valid, batch_size=self.batch_size)
         optimizer = optim.Adam(model.parameters(), lr=self.lr)
         # Training loop
         tini = time.time()

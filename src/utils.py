@@ -45,6 +45,7 @@ def observation_reconstruction(selected, X_test, X_testp, y_test, y_testp):
     fig, axs = plt.subplots(
         nrows=2, ncols=len(selected), figsize=(25, 5), constrained_layout=True
     )
+    axs = np.array(axs).reshape(2, -1)
     for i, x in enumerate(selected):
         axs[0, i].set_title(f"Real class: {int(y_test[x][0])}")
         axs[0, i].plot(X_test[x, 0])

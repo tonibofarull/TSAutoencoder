@@ -10,7 +10,7 @@ class Encoder(nn.Module):
         # By using ModuleList we ensure that the layers of the list are properly registered
         self.conv1 = nn.ModuleList(
             [
-                nn.Conv1d(1, M, kernel_size=Lf, dilation=d, padding=d * (Lf - 1) // 2)
+                nn.Conv1d(1, M, kernel_size=Lf, dilation=d, padding=d*(Lf-1)//2)
                 for d in dilation
             ]
         )
@@ -39,7 +39,7 @@ class Decoder(nn.Module):
         self.deco1 = nn.ModuleList(
             [
                 nn.ConvTranspose1d(
-                    M, 1, kernel_size=Lf, dilation=d, padding=d * (Lf - 1) // 2
+                    M, 1, kernel_size=Lf, dilation=d, padding=d*(Lf-1)//2
                 )
                 for d in dilation
             ]
@@ -81,7 +81,7 @@ class Classifier(nn.Module):
 
 
 class CAE(nn.Module):
-    def __init__(self, cfg, dilation=[1, 2, 4, 8], num_classes=3):
+    def __init__(self, cfg, dilation=[1, 2, 4, 8]):
         super().__init__()
         self.k = len(dilation)  # Number of dilations
         self.M = cfg.M  # Number of filters per dilation
@@ -89,15 +89,16 @@ class CAE(nn.Module):
         self.bottleneck_nn = cfg.bottleneck_nn
         self.length = cfg.length
         self.dilation = dilation
-        self.num_classes = num_classes
+        self.num_classes = cfg.num_classes
         self.lossf = CAELoss(alpha=cfg.alpha, lmd=cfg.lmd)
 
-        k, M, Lf, bottleneck_nn, length = (
+        k, M, Lf, bottleneck_nn, length, num_classes = (
             self.k,
             self.M,
             self.Lf,
             self.bottleneck_nn,
             self.length,
+            self.num_classes
         )
         # MODULES DEFINITION
         self.encoder = Encoder(k, M, Lf, dilation, length, bottleneck_nn)

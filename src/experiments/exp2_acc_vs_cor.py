@@ -1,6 +1,5 @@
 import argparse
 import json
-import pickle
 import random
 import time
 from datetime import datetime
@@ -104,6 +103,7 @@ def print_results(res, alphas, num_samples):
 def main(num_alphas=21, num_samples=8):
     parser = argparse.ArgumentParser()
     parser.add_argument("--num-cpus", type=int)
+    parser.add_argument("--output", default="tuning.json", help="json with stored results.")
     args = parser.parse_args()
 
     ray.init(include_dashboard=False, num_cpus=args.num_cpus)
@@ -114,7 +114,7 @@ def main(num_alphas=21, num_samples=8):
     dl = ElectricDevices()
     data_train, data_valid, data_test = dl()
 
-    with open("tuning.json") as f:
+    with open(args.output) as f:
         configs = json.load(f)
 
     with initialize(config_path="configs"):

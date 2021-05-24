@@ -1,5 +1,0 @@
-[flake8]
-max-line-length = 88
-max-complexity = 11
-select = E711,E712,E901,F822,F823,W191,W292,W391
-exclude = .git,.venv,__pycache__

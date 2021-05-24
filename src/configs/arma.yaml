@@ -1,0 +1,18 @@
+model:
+    M: 4                            # Filters per dilated convolution
+    Lf: 3                           # Size of 1D convolution
+    length: 96                      # Length of the input Time Series
+    num_classes: 1                  # Number of classes
+    bottleneck_nn: 24               # Number of neurons in the bottleneck
+
+    lmd: 0.00001                    # Regularization parameter
+    alpha: 0                        # Tradeoff between reconstruction (alpha=0) and classification (alpha=1)
+
+train:
+    verbose: True                   # Shows details about the training
+    shuffle: True                   # Shuffles the training data after each epoch
+    batch_size: 64                  # Batch size
+
+    iters: 3000                     # Number of maximum iterations
+    early_stopping_rounds: 30       # Number of rounds without improvement before stopping
+    lr: 0.0001                      # Learning rate

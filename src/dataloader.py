@@ -3,7 +3,7 @@ import abc
 import numpy as np
 import pandas as pd
 import torch
-
+import statsmodels.api as sm
 
 class Dataset(abc.ABC):
     """
@@ -48,9 +48,7 @@ class ElectricDevices(Dataset):
             "../data/ElectricDevices/ElectricDevices_TRAIN.txt"
         )
         data_train = data_train.astype(np.float32)
-        idx = list(range(len(data_train)))
-        np.random.shuffle(idx)
-        data_train = data_train[idx]
+        np.random.shuffle(data_train)
         data_train[:, 0, -1] -= 1
 
         data_train, data_valid = data_train[:-1000, :, :], data_train[-1000:, :, :]
@@ -77,3 +75,41 @@ class ElectricDevices(Dataset):
             .reshape(-1, 1, df.shape[1])
         )
         return data
+
+class ARMA(Dataset):
+    def __init__(self, case=4):
+        self.case = case
+        super().__init__()
+
+    def load_data(self, n=900, L=96):
+        data = None
+        if self.case == 1:
+            data = np.c_[ARMA.arma(n, L, [0.6], [0.05]), np.zeros(n)]
+        elif self.case == 2:
+            data = np.c_[ARMA.arma(n, L, [0, 0.6], [0, 0.05]), np.zeros(n)]
+        elif self.case == 3:
+            data = np.c_[ARMA.arma(n, L, [0, 0, 0, 0.6], [0, 0, 0, 0.05]), np.zeros(n)]
+        elif self.case == 4:
+            data = np.c_[ARMA.arma(n, L, [0, 0, 0, 0, 0, 0, 0, 0.6], [0, 0, 0, 0, 0, 0, 0, 0.05]), np.zeros(n)]
+        else:
+            data = np.r_[
+                np.c_[ARMA.arma(900, 96, [0, -0.5], [0, 0.1]), np.zeros(n)], 
+                np.c_[ARMA.arma(900, 96, [0, 0, 0.7], [0, 0, 0.05]), np.ones(n)],
+                np.c_[ARMA.arma(900, 96, [0, 0, 0, 0, -0.6], [0, 0, 0, 0, 0.2]), np.ones(n)*2]
+            ]
+
+        np.random.shuffle(data)
+        data = data.reshape(-1, 1, L+1).astype(np.float32)
+        data_train, data_valid, data_test = np.split(data, 3)
+
+        self.data_train = Dataset.normalize(torch.from_numpy(data_train))
+        self.data_valid = Dataset.normalize(torch.from_numpy(data_valid))
+        self.data_test = Dataset.normalize(torch.from_numpy(data_test))
+
+    @staticmethod
+    def arma(n, length, ar, ma):
+        ar = np.r_[1, -np.array(ar)]
+        ma = np.r_[1,  np.array(ma)]
+        arma_process = sm.tsa.ArmaProcess(ar, ma)
+        data = [arma_process.generate_sample(nsample=length) for _ in range(n)]
+        return np.array(data, dtype=np.float32)

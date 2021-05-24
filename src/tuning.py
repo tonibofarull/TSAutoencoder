@@ -30,7 +30,7 @@ def objective(config, data, cfg, checkpoint_dir=None):
     cfg.train.lr = config["lr"]
     cfg.train.early_stopping_rounds = config["early_stopping_rounds"]
     # END
-    model = CAE(cfg.model, num_classes=7)
+    model = CAE(cfg.model, num_classes=cfg.model.num_classes)
     trainer = Trainer(cfg.train)
     trainer.fit(model, data_train, data_valid1)
     loss = model.loss(data_valid2, apply_reg=False).item()
@@ -38,7 +38,8 @@ def objective(config, data, cfg, checkpoint_dir=None):
 
 
 def main(
-    num_alphas=21,
+    dl=ElectricDevices(),
+    alphas=[float(f) for f in np.linspace(0, 1, 21)],
     num_samples=16,
     config={
         "lmd": tune.loguniform(1e-8, 1e-3),
@@ -48,15 +49,13 @@ def main(
 ):
     parser = argparse.ArgumentParser()
     parser.add_argument("--num_cpus", type=int)
+    parser.add_argument("--output", default="tuning.json", help="Output json to store results.")
     args = parser.parse_args()
 
     print("Initializating...")
     ray.init(include_dashboard=False, num_cpus=args.num_cpus)
     print("Done.")
 
-    alphas = [float(f) for f in np.linspace(0, 1, num_alphas)]
-
-    dl = ElectricDevices()
     data_train, data_valid, _ = dl()
     n_valid = data_valid.shape[0]
     data_valid1 = data_valid[: n_valid // 2]
@@ -89,7 +88,7 @@ def main(
         best_config = analysis.get_best_config(metric="loss", mode="min")
 
         results.update({exp: {"alpha": alpha, "hyperparams": best_config}})
-        with open("tuning.json", "w") as f:
+        with open(args.output, "w") as f:
             json.dump(results, f, indent=4)
 
         print("Best config: ", best_config)
