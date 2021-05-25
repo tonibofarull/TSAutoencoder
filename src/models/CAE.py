@@ -81,18 +81,19 @@ class Classifier(nn.Module):
 
 
 class CAE(nn.Module):
-    def __init__(self, cfg, dilation=[1, 2, 4, 8]):
+    def __init__(self, cfg):
         super().__init__()
-        self.k = len(dilation)  # Number of dilations
+        self.dilation = cfg.dilation
+        self.k = len(cfg.dilation)  # Number of dilations
         self.M = cfg.M  # Number of filters per dilation
         self.Lf = cfg.Lf
         self.bottleneck_nn = cfg.bottleneck_nn
         self.length = cfg.length
-        self.dilation = dilation
         self.num_classes = cfg.num_classes
         self.lossf = CAELoss(alpha=cfg.alpha, lmd=cfg.lmd)
 
-        k, M, Lf, bottleneck_nn, length, num_classes = (
+        dilation, k, M, Lf, bottleneck_nn, length, num_classes = (
+            self.dilation,
             self.k,
             self.M,
             self.Lf,
