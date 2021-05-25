@@ -59,9 +59,7 @@ def acc_cor(inp, data, cfg, configs):
     ]
     cors = np.nan_to_num(cors)  # If division by 0 use cor = 0
     cor = np.mean(cors)
-    print(
-        f"END exp {exp} seed {seed}. acc={acc:.8f}, cor={cor:.8f} in {time.time()-tini:.1f}s"
-    )
+    print(f"END exp {exp} seed {seed}. acc={acc:.8f}, cor={cor:.8f} in {time.time()-tini:.1f}s")
     return acc, cor
 
 
@@ -69,11 +67,11 @@ def print_results(res, alphas, num_samples):
     print(res)
     num_alphas = len(alphas)
     accs = [
-        list(x[0] for x in res[i * num_samples : (i + 1) * num_samples])
+        list(x[0] for x in res[i*num_samples : (i+1)*num_samples])
         for i in range(num_alphas)
     ]
     cors = [
-        list(x[1] for x in res[i * num_samples : (i + 1) * num_samples])
+        list(x[1] for x in res[i*num_samples : (i+1)*num_samples])
         for i in range(num_alphas)
     ]
     print("accs:")
@@ -88,11 +86,11 @@ def print_results(res, alphas, num_samples):
 
     plt.plot(alphas, cors_mean, "o-", label="Correlation")
     plt.fill_between(
-        alphas, cors_mean - 2 * cors_std, cors_mean + 2 * cors_std, alpha=0.1
+        alphas, cors_mean - 2*cors_std, cors_mean + 2*cors_std, alpha=0.1
     )
     plt.plot(alphas, accs_mean, "o-", label="Accuracy")
     plt.fill_between(
-        alphas, accs_mean - 2 * accs_std, accs_mean + 2 * accs_std, alpha=0.1
+        alphas, accs_mean - 2*accs_std, accs_mean + 2*accs_std, alpha=0.1
     )
 
     plt.legend()

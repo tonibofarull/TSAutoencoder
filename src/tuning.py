@@ -83,7 +83,12 @@ def main(
             name=f"alpha_{exp}",
             num_samples=num_samples,
             config=config,
-            search_alg=HyperOptSearch(metric="loss", mode="min", random_state_seed=exp),
+            search_alg=HyperOptSearch(
+                metric="loss", 
+                mode="min", 
+                random_state_seed=exp,
+                n_initial_points=10
+            ),
             verbose=2,
         )
         best_config = analysis.get_best_config(metric="loss", mode="min")
