@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import ray
 import torch
+from dataloader import ARMA
 from dataloader import ElectricDevices
 from hydra.experimental import compose
 from hydra.experimental import initialize
@@ -51,7 +52,6 @@ def acc_cor(inp, data, cfg, configs):
 
     cm = confusion_matrix(y_test, y_testp)
     acc = np.sum(np.diag(cm)) / np.sum(cm)
-
     np.seterr(all="ignore")  # Ignore warnings of divisions by 0
     cors = [
         distance_corr(X_testp[i, 0], X_test[i, 0].detach().numpy(), n_boot=None)
@@ -101,12 +101,12 @@ def print_results(res, alphas, num_samples):
 
 
 def main(
-    dl=ElectricDevices(),
+    dl=ARMA(5),
     alphas=[float(f) for f in np.linspace(0, 1, 21)],
     num_samples=8
 ):
     parser = argparse.ArgumentParser()
-    parser.add_argument("--num-cpus", type=int)
+    parser.add_argument("--num_cpus", type=int)
     parser.add_argument("--json", default="tuning.json", help="json with stored results.")
     args = parser.parse_args()
 

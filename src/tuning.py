@@ -6,6 +6,7 @@ import hydra
 import numpy as np
 import ray
 import torch
+from dataloader import ARMA
 from dataloader import ElectricDevices
 from hydra.experimental import compose
 from hydra.experimental import initialize
@@ -38,7 +39,7 @@ def objective(config, data, cfg, checkpoint_dir=None):
 
 
 def main(
-    dl=ElectricDevices(),
+    dl=ARMA(5),
     alphas=[float(f) for f in np.linspace(0, 1, 21)],
     num_samples=16,
     config={
