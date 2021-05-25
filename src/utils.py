@@ -42,11 +42,11 @@ def accuracy(y_test, y_testp):
     plt.show()
 
 
-def observation_reconstruction(selected, X_test, X_testp, y_test, y_testp):
+def observation_reconstruction(selected, X_test, X_testp, y_test, y_testp, ncols=3):
     fig, axs = plt.subplots(
-        nrows=3, ncols=int(np.ceil(len(selected)/3)), figsize=(15, 11), constrained_layout=True
+        nrows=int(np.ceil(len(selected)/ncols)), ncols=ncols, figsize=(15, 11), constrained_layout=True
     )
-    axs = np.array(axs).reshape(3, -1)
+    axs = np.array(axs).reshape(-1, ncols)
     for i, x in enumerate(selected):
         sns.lineplot(
             x=range(96), y=X_test[x, 0], label="Original", color="green", ax=axs.flatten()[i]
