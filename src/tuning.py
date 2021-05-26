@@ -19,7 +19,6 @@ random.seed(0)  # Seed for the hyperparameter selection
 np.random.seed(0)
 torch.manual_seed(0)
 
-
 def objective(config, data, cfg, checkpoint_dir=None):
     random.seed(1)  # Seed for the training
     np.random.seed(1)
@@ -39,8 +38,12 @@ def objective(config, data, cfg, checkpoint_dir=None):
 
 
 def main(
+    # Tune the model for several values of the variable
+    VARIABLE="alpha",
+    values=[float(f) for f in np.linspace(0, 1, 21)],
+    # Dataset
     dl=ARMA(5),
-    alphas=[float(f) for f in np.linspace(0, 1, 21)],
+    # Tuning settings
     num_samples=16,
     n_initial_points=10,
     config={
@@ -69,20 +72,20 @@ def main(
         cfg = compose(config_name=args.config_name)
 
     results = dict()
-    for exp, alpha in enumerate(alphas):
+    for exp, value in enumerate(values):
         print("################################")
         print("################################")
-        print(f"EXPERIMENT: alpha = {alpha}")
+        print(f"EXPERIMENT: {VARIABLE} = {value}")
         print("################################")
         print("################################")
 
-        cfg.model.alpha = alpha
+        cfg.model[VARIABLE] = value
 
         analysis = tune.run(
             lambda config, checkpoint_dir=None: objective(
                 config, data, cfg, checkpoint_dir
             ),
-            name=f"alpha_{exp}",
+            name=f"{VARIABLE}_{exp}",
             num_samples=num_samples,
             config=config,
             search_alg=HyperOptSearch(
@@ -95,7 +98,7 @@ def main(
         )
         best_config = analysis.get_best_config(metric="loss", mode="min")
 
-        results.update({exp: {"alpha": alpha, "hyperparams": best_config}})
+        results.update({exp: {VARIABLE: value, "hyperparams": best_config}})
         with open(args.output, "w") as f:
             json.dump(results, f, indent=4)
 

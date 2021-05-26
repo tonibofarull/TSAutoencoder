@@ -23,6 +23,9 @@ random.seed(0)  # Not needed
 np.random.seed(0)
 torch.manual_seed(0)
 
+# Set the variable of cfg.model that is being modified (alpha or bottleneck_nn)
+VARIABLE = "alpha"
+xlabel = "alpha"
 
 @ray.remote
 def acc_cor(inp, data, cfg, configs):
@@ -35,7 +38,7 @@ def acc_cor(inp, data, cfg, configs):
     print(f"INI exp {exp} seed {seed}. {datetime.now().replace(microsecond=0)}")
     data_train, data_valid, data_test = data
     config = configs[str(exp)]
-    cfg.model.alpha = config["alpha"]
+    cfg.model[VARIABLE] = config[VARIABLE]
     cfg.model.lmd = config["hyperparams"]["lmd"]
     cfg.train.lr = config["hyperparams"]["lr"]
     cfg.train.early_stopping_rounds = config["hyperparams"]["early_stopping_rounds"]
@@ -94,13 +97,13 @@ def print_results(res, alphas, num_samples):
     )
 
     plt.legend()
-    plt.xlabel("alpha")
-    plt.savefig("alpha-cor_acc.png", dpi=100)
+    plt.xlabel(xlabel)
+    plt.savefig("cor_acc.png", dpi=100)
 
 
 def main(
     dl=ARMA(5),
-    alphas=[float(f) for f in np.linspace(0, 1, 21)],
+    values=[float(f) for f in np.linspace(0, 1, 21)],
     num_samples=8
 ):
     parser = argparse.ArgumentParser()
@@ -111,7 +114,7 @@ def main(
 
     ray.init(include_dashboard=False, num_cpus=args.num_cpus)
 
-    vals = list(product(range(len(alphas)), range(num_samples)))
+    vals = list(product(range(len(values)), range(num_samples)))
 
     data_train, data_valid, data_test = dl()
 
@@ -126,7 +129,7 @@ def main(
     cfg_id, configs_id = ray.put(cfg), ray.put(configs)
 
     res = ray.get([acc_cor.remote(x, data_id, cfg_id, configs_id) for x in vals])
-    print_results(res, alphas, num_samples)
+    print_results(res, values, num_samples)
 
 
 if __name__ == "__main__":

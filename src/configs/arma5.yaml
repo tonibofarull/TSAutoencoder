@@ -6,7 +6,7 @@ model:
     bottleneck_nn: 24               # Number of neurons in the bottleneck
     num_classes: 4                  # Number of classes
 
-    lmd: 3.0450554052335746e-08     # Regularization parameter
+    lmd: 2.0335678118450766e-08     # Regularization parameter
     alpha: 0.05                     # Tradeoff between reconstruction (alpha=0) and classification (alpha=1)
 
 train:
@@ -14,6 +14,6 @@ train:
     shuffle: True                   # Shuffles the training data after each epoch
     batch_size: 64                  # Batch size
 
-    iters: 3000                     # Number of maximum iterations
-    early_stopping_rounds: 20       # Number of rounds without improvement before stopping
-    lr: 0.0017725138650061408       # Learning rate
+    iters: 300                      # Number of maximum iterations
+    early_stopping_rounds: 14       # Number of rounds without improvement before stopping
+    lr: 0.0032600552639418623       # Learning rate
