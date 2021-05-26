@@ -42,6 +42,7 @@ def main(
     dl=ARMA(5),
     alphas=[float(f) for f in np.linspace(0, 1, 21)],
     num_samples=16,
+    n_initial_points=10,
     config={
         "lmd": tune.loguniform(1e-8, 1e-3),
         "lr": tune.loguniform(1e-6, 1e-1),
@@ -51,6 +52,7 @@ def main(
     parser = argparse.ArgumentParser()
     parser.add_argument("--num_cpus", type=int)
     parser.add_argument("--output", default="tuning.json", help="Output json to store results.")
+    parser.add_argument("--config_name", default="arma5", help="Config file.")
     args = parser.parse_args()
 
     print("Initializating...")
@@ -64,7 +66,7 @@ def main(
     data = (data_train, data_valid1, data_valid2)
 
     with initialize(config_path="configs"):
-        cfg = compose(config_name="config")
+        cfg = compose(config_name=args.config_name)
 
     results = dict()
     for exp, alpha in enumerate(alphas):
@@ -87,7 +89,7 @@ def main(
                 metric="loss", 
                 mode="min", 
                 random_state_seed=exp,
-                n_initial_points=10
+                n_initial_points=n_initial_points
             ),
             verbose=2,
         )

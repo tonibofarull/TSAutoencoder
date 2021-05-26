@@ -106,6 +106,7 @@ def main(
     parser = argparse.ArgumentParser()
     parser.add_argument("--num_cpus", type=int)
     parser.add_argument("--json", default="tuning.json", help="json with stored results.")
+    parser.add_argument("--config_name", default="arma5", help="Config file.")
     args = parser.parse_args()
 
     ray.init(include_dashboard=False, num_cpus=args.num_cpus)
@@ -118,7 +119,7 @@ def main(
         configs = json.load(f)
 
     with initialize(config_path="configs"):
-        cfg = compose(config_name="config")
+        cfg = compose(config_name=args.config_name)
 
     # Serialize data
     data_id = ray.put((data_train, data_valid, data_test))
