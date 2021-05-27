@@ -24,8 +24,8 @@ np.random.seed(0)
 torch.manual_seed(0)
 
 # Set the variable of cfg.model that is being modified (alpha or bottleneck_nn)
-VARIABLE = "alpha"
-xlabel = "alpha"
+VARIABLE = "bottleneck_nn"
+xlabel = "Number of bottleneck neurons"
 
 @ray.remote
 def acc_cor(inp, data, cfg, configs):
@@ -66,16 +66,16 @@ def acc_cor(inp, data, cfg, configs):
     return acc, cor
 
 
-def print_results(res, alphas, num_samples):
+def print_results(res, values, num_samples):
     print(res)
-    num_alphas = len(alphas)
+    num_values = len(values)
     accs = [
         list(x[0] for x in res[i*num_samples : (i+1)*num_samples])
-        for i in range(num_alphas)
+        for i in range(num_values)
     ]
     cors = [
         list(x[1] for x in res[i*num_samples : (i+1)*num_samples])
-        for i in range(num_alphas)
+        for i in range(num_values)
     ]
     print("accs:")
     print(accs)
@@ -87,13 +87,13 @@ def print_results(res, alphas, num_samples):
     accs_mean = np.array([np.mean(x) for x in accs])
     accs_std = np.array([np.std(x) for x in accs])
 
-    plt.plot(alphas, cors_mean, "o-", label="Correlation")
+    plt.plot(values, cors_mean, "o-", label="Correlation")
     plt.fill_between(
-        alphas, cors_mean - 2*cors_std, cors_mean + 2*cors_std, alpha=0.1
+        values, cors_mean - 2*cors_std, cors_mean + 2*cors_std, alpha=0.1
     )
-    plt.plot(alphas, accs_mean, "o-", label="Accuracy")
+    plt.plot(values, accs_mean, "o-", label="Accuracy")
     plt.fill_between(
-        alphas, accs_mean - 2*accs_std, accs_mean + 2*accs_std, alpha=0.1
+        values, accs_mean - 2*accs_std, accs_mean + 2*accs_std, alpha=0.1
     )
 
     plt.legend()
@@ -102,14 +102,14 @@ def print_results(res, alphas, num_samples):
 
 
 def main(
-    dl=ARMA(5),
-    values=[float(f) for f in np.linspace(0, 1, 21)],
+    dl=ElectricDevices(),
+    values=list(range(1, 100, 10)),
     num_samples=8
 ):
     parser = argparse.ArgumentParser()
     parser.add_argument("--num_cpus", type=int)
     parser.add_argument("--json", default="tuning.json", help="json with stored results.")
-    parser.add_argument("--config_name", default="arma5", help="Config file.")
+    parser.add_argument("--config_name", default="config", help="Config file.")
     args = parser.parse_args()
 
     ray.init(include_dashboard=False, num_cpus=args.num_cpus)

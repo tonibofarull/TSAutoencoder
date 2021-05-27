@@ -39,10 +39,10 @@ def objective(config, data, cfg, checkpoint_dir=None):
 
 def main(
     # Tune the model for several values of the variable
-    VARIABLE="alpha",
-    values=[float(f) for f in np.linspace(0, 1, 21)],
+    VARIABLE="bottleneck_nn",
+    values=list(range(1, 100, 10)),
     # Dataset
-    dl=ARMA(5),
+    dl=ElectricDevices(),
     # Tuning settings
     num_samples=16,
     n_initial_points=10,
@@ -55,7 +55,7 @@ def main(
     parser = argparse.ArgumentParser()
     parser.add_argument("--num_cpus", type=int)
     parser.add_argument("--output", default="tuning.json", help="Output json to store results.")
-    parser.add_argument("--config_name", default="arma5", help="Config file.")
+    parser.add_argument("--config_name", default="config", help="Config file.")
     args = parser.parse_args()
 
     print("Initializating...")
