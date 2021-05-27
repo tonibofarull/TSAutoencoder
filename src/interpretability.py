@@ -138,7 +138,9 @@ def shapley_input_vs_output(model, selected, X_test, hist_input):
         print(i, end=" ")
         attrs.append(f_attrs(X_test[x, 0]))
 
-    fig, axs = plt.subplots(nrows=3, ncols=3, figsize=(15, 15), constrained_layout=True)
+    fig, axs = plt.subplots(
+        nrows=int(np.ceil(len(selected)/3)), ncols=3, figsize=(15, 11), constrained_layout=True
+    )
     axs = np.array(axs)
     axs[2, 1].set_axis_off()
     axs[2, 2].set_axis_off()
@@ -179,7 +181,9 @@ def shapley_bottleneck_vs_output(model, selected, X_test, hist_bn):
         inp = model.encoder(X_test[x, 0].reshape(1, 1, -1), False).flatten()
         attrs.append(f_attrs(inp))
 
-    fig, axs = plt.subplots(nrows=3, ncols=3, figsize=(15, 15), constrained_layout=True)
+    fig, axs = plt.subplots(
+        nrows=int(np.ceil(len(selected)/3)), ncols=3, figsize=(15, 11), constrained_layout=True
+    )
     axs = np.array(axs)
     axs[2, 1].set_axis_off()
     axs[2, 2].set_axis_off()
@@ -220,7 +224,9 @@ def shapley_input_vs_bottleneck(model, selected, X_test, hist_input):
         inp = X_test[x, 0]
         attrs.append(f_attrs(inp))
 
-    fig, axs = plt.subplots(nrows=3, ncols=3, figsize=(15, 15), constrained_layout=True)
+    fig, axs = plt.subplots(
+        nrows=int(np.ceil(len(selected)/3)), ncols=3, figsize=(15, 11), constrained_layout=True
+    )
     axs = np.array(axs)
     axs[2, 1].set_axis_off()
     axs[2, 2].set_axis_off()
@@ -260,7 +266,9 @@ def shapley_bottleneck_vs_class(model, selected, X_test, hist_bn):
         inp = model.encoder(X_test[x, 0].reshape(1, 1, -1), False).flatten()
         attrs.append(f_attrs(inp))
 
-    fig, axs = plt.subplots(nrows=3, ncols=3, figsize=(8, 8), constrained_layout=True)
+    fig, axs = plt.subplots(
+        nrows=int(np.ceil(len(selected)/3)), ncols=3, figsize=(8, 8), constrained_layout=True
+    )
     axs = np.array(axs)
     axs[2, 1].set_axis_off()
     axs[2, 2].set_axis_off()
@@ -290,7 +298,9 @@ def shapley_input_vs_class(model, selected, X_test, hist_input):
         inp = X_test[x, 0]
         attrs.append(f_attrs(inp))
 
-    fig, axs = plt.subplots(nrows=3, ncols=3, figsize=(15, 15), constrained_layout=True)
+    fig, axs = plt.subplots(
+        nrows=int(np.ceil(len(selected)/3)), ncols=3, figsize=(15, 11), constrained_layout=True
+    )
     axs = np.array(axs)
     axs[2, 1].set_axis_off()
     axs[2, 2].set_axis_off()
