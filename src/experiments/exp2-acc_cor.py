@@ -87,18 +87,23 @@ def print_results(res, values, num_samples):
     accs_mean = np.array([np.mean(x) for x in accs])
     accs_std = np.array([np.std(x) for x in accs])
 
+
+    ll = np.maximum(cors_mean - 2*cors_std, 0)
+    ul = np.minimum(cors_mean + 2*cors_std, 1)
     plt.plot(values, cors_mean, "o-", label="Correlation")
-    plt.fill_between(
-        values, cors_mean - 2*cors_std, cors_mean + 2*cors_std, alpha=0.1
-    )
+    plt.fill_between(values, ll, ul, alpha=0.1)
+
+    ll = np.maximum(accs_mean - 2*accs_std, 0)
+    ul = np.minimum(accs_mean + 2*accs_std, 1)
     plt.plot(values, accs_mean, "o-", label="Accuracy")
-    plt.fill_between(
-        values, accs_mean - 2*accs_std, accs_mean + 2*accs_std, alpha=0.1
-    )
+    plt.fill_between(values, ll, ul, alpha=0.1)
 
     plt.legend()
     plt.xlabel(xlabel)
+    plt.ylim((-0.05, 1.05))
     plt.savefig("cor_acc.png", dpi=100)
+    plt.show()
+
 
 
 def main(
