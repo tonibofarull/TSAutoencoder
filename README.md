@@ -1,39 +1,50 @@
 # Autoencoder
 
-Implementation of a Convolutional Autoencoder for univariate Time Series.
+Implementation of a Dilated Convolutional Autoencoder for univariate Time Series.
+
+<br>
+<div align="center">
+	<img src="utils/assets/model.png" width="80%"/>
+</div>
+<br>
 
 ## Requirements
 
-You need Python 3.8 to run the code. There are some packages that for the moment are not compatible with version 3.9. See [here](https://github.com/ray-project/ray/issues/11287).
+Python 3.8 required. Some packages are incompatible with version 3.9. See [here](https://github.com/ray-project/ray/issues/11287).
 
-## Get Started
-
-Once with a compatible version:
-
-- Create a virtual environment
+Install dependencies using pip,
 
 ```
-python3 -m venv .venv
+pip install -r requirements.txt
 ```
 
-- Activate the environment
+## Getting Started
 
-on Linux,
-
-```
-source /path/to/Autoencoder/.venv/bin/activate
-```
-
-on Windows,
+Structure of the project,
 
 ```
-/path/to/Autoencoder/.venv/Scripts/activate.bat
+.
+├── data     
+│   └── ElectricDevices
+├── src
+│   ├── configs
+│   │   ├── arma.yaml
+│   │   ├── arma5.yaml
+│   │   └── config.yaml
+│   ├── dataloader.py
+│   ├── experiments
+│   │   ├── exp1-shapley_value.ipynb
+│   │   └── exp2-acc_cor.py
+│   ├── interpretability.py
+│   ├── main.ipynb
+│   ├── models
+│   │   ├── CAE.py
+│   │   └── losses.py
+│   ├── train.py
+│   ├── tuning.py
+│   └── utils.py
+├── utils
+└── weights
 ```
 
-- Install the dependencies
-
-```
-pip3 install -r requirements.txt
-```
-
-Now the code is ready to be executed.
+Execute the jupyter notebook `main.ipynb` to load the data, train the model and obtain the evaluation and interpretation.
