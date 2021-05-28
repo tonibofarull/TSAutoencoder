@@ -121,7 +121,7 @@ def main(
     with open(args.json) as f:
         configs = json.load(f)
 
-    with initialize(config_path="configs"):
+    with initialize(config_path="../configs"):
         cfg = compose(config_name=args.config_name)
 
     # Serialize data
