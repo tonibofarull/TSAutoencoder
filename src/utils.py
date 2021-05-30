@@ -13,7 +13,7 @@ def get_predictions(model, X_test):
     X_testp = X_testp.detach().numpy()
     probs_testp = model.classifier.get_probs(outclass_testp)
     y_testp = torch.argmax(probs_testp, dim=1).detach().numpy()
-    return X_testp, y_testp
+    return X_testp, y_testp, bn
 
 
 def reconstruction(X_test, X_testp):
