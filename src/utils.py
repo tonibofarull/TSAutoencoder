@@ -42,11 +42,8 @@ def accuracy(y_test, y_testp):
     plt.show()
 
 
-def observation_reconstruction(selected, X_test, X_testp, y_test, y_testp):
-    fig, axs = plt.subplots(
-        nrows=int(np.ceil(len(selected)/3)), ncols=3, figsize=(15, 11), constrained_layout=True
-    )
-    axs = np.array(axs).reshape(-1, 3)
+def observation_reconstruction(selected, X_test, X_testp, nrows=3, ncols=3, figsize=(14, 12)):
+    fig, axs = get_subplots(nrows, ncols, figsize, selected)
     for i, x in enumerate(selected):
         sns.lineplot(
             x=range(96), y=X_test[x, 0], label="Original", color="green", ax=axs.flatten()[i]
@@ -70,8 +67,8 @@ def data_input_exploration(X_train):
 
     ax = sns.histplot(X_train.flatten(), stat="density")
     ax.set(xlabel="Training input values")
+    plt.savefig("sv_data-distribution.png", dpi=100)
     plt.plot()
-    # plt.savefig("sv_data-distribution.png", dpi=100)
 
 
 def data_bottleneck_exploration(model, X_train):
@@ -84,8 +81,8 @@ def data_bottleneck_exploration(model, X_train):
         aux = pd.DataFrame({"x": bn[:, i]})
         axs.flat[i].set_title(f"Neuron {i}")
         sns.histplot(data=aux, x="x", ax=axs.flat[i], kde=True)
-    plt.show()
-    # plt.savefig("sv_data-distribution.png", dpi=100)
+    plt.savefig("sv_bottleneck-distribution.png", dpi=100)
+    plt.plot()
 
 
 def baseline(data_train, data_valid, data_test):
@@ -122,7 +119,20 @@ def baseline(data_train, data_valid, data_test):
     y_testp.astype(int)
 
     cm = confusion_matrix(y_test, y_testp)
+    print("Test acc:", np.sum(np.diag(cm)) / np.sum(cm))
     sns.heatmap(cm, annot=True, cmap="Blues")
     plt.xlabel("Predicted label")
     plt.ylabel("True label")
-    print("Test acc:", np.sum(np.diag(cm)) / np.sum(cm))
+    plt.savefig("accuracy_baseline.png", dpi=100)
+    plt.show()
+
+
+# UTILS
+
+
+def get_subplots(nrows, ncols, figsize, selected):
+    fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=figsize, constrained_layout=True)
+    axs = np.array(axs)
+    for i in range(nrows*ncols - len(selected)):
+        axs.flatten()[-1-i].set_axis_off()
+    return fig, axs

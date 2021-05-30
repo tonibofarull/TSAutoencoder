@@ -1,10 +1,8 @@
-import os
-
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 import torch
-from torch import optim
+from utils import get_subplots
 
 # diverging_colors = sns.color_palette("RdBu", 9)
 diverging_colors = sns.color_palette("vlag", as_cmap=True)
@@ -120,7 +118,6 @@ def shapley_sampling(
         phis.append(sv.numpy())
 
     phis = np.stack(phis)
-    # print(np.std(phis, axis=0))
     phis = np.mean(phis, axis=0)
     return phis
 
@@ -128,7 +125,7 @@ def shapley_sampling(
 # Shapley Values for different combinations of input, bottleneck, ouput and class prediction
 
 
-def shapley_input_vs_output(model, selected, X_test, hist_input):
+def shapley_input_vs_output(model, selected, X_test, hist_input, nrows=2, ncols=3, figsize=(15, 11)):
     func = lambda x: model(x.reshape(-1, 1, 96), False)[0][:, 0]
     f_attrs = lambda inp: np.array(
         [shapley_sampling(inp, func, j, hist_input) for j in range(model.length)]
@@ -138,12 +135,8 @@ def shapley_input_vs_output(model, selected, X_test, hist_input):
         print(i, end=" ")
         attrs.append(f_attrs(X_test[x, 0]))
 
-    fig, axs = plt.subplots(
-        nrows=int(np.ceil(len(selected)/3)), ncols=3, figsize=(15, 11), constrained_layout=True
-    )
-    axs = np.array(axs)
-    axs[2, 1].set_axis_off()
-    axs[2, 2].set_axis_off()
+    fig, axs = get_subplots(nrows, ncols, figsize, selected)
+
     for i, x in enumerate(selected):
         ax = sns.heatmap(
             attrs[i],
@@ -170,7 +163,7 @@ def shapley_input_vs_output(model, selected, X_test, hist_input):
     plt.show()
 
 
-def shapley_bottleneck_vs_output(model, selected, X_test, hist_bn):
+def shapley_bottleneck_vs_output(model, selected, X_test, hist_bn, nrows=2, ncols=3, figsize=(15, 11)):
     func = lambda x: model.decoder(x)[:, 0, :]
     f_attrs = lambda inp: np.array(
         [shapley_sampling(inp, func, j, hist_bn) for j in range(model.bottleneck_nn)]
@@ -181,12 +174,8 @@ def shapley_bottleneck_vs_output(model, selected, X_test, hist_bn):
         inp = model.encoder(X_test[x, 0].reshape(1, 1, -1), False).flatten()
         attrs.append(f_attrs(inp))
 
-    fig, axs = plt.subplots(
-        nrows=int(np.ceil(len(selected)/3)), ncols=3, figsize=(15, 11), constrained_layout=True
-    )
-    axs = np.array(axs)
-    axs[2, 1].set_axis_off()
-    axs[2, 2].set_axis_off()
+    fig, axs = get_subplots(nrows, ncols, figsize, selected)
+
     for i, x in enumerate(selected):
         ax = sns.heatmap(
             attrs[i],
@@ -213,7 +202,7 @@ def shapley_bottleneck_vs_output(model, selected, X_test, hist_bn):
     plt.show()
 
 
-def shapley_input_vs_bottleneck(model, selected, X_test, hist_input):
+def shapley_input_vs_bottleneck(model, selected, X_test, hist_input, nrows=2, ncols=3, figsize=(15, 11)):
     func = lambda x: model.encoder(x.reshape(-1, 1, 96), False)
     f_attrs = lambda inp: np.array(
         [shapley_sampling(inp, func, j, hist_input) for j in range(model.length)]
@@ -224,12 +213,8 @@ def shapley_input_vs_bottleneck(model, selected, X_test, hist_input):
         inp = X_test[x, 0]
         attrs.append(f_attrs(inp))
 
-    fig, axs = plt.subplots(
-        nrows=int(np.ceil(len(selected)/3)), ncols=3, figsize=(15, 11), constrained_layout=True
-    )
-    axs = np.array(axs)
-    axs[2, 1].set_axis_off()
-    axs[2, 2].set_axis_off()
+    fig, axs = get_subplots(nrows, ncols, figsize, selected)
+
     for i, x in enumerate(selected):
         ax = sns.heatmap(
             attrs[i],
@@ -255,7 +240,7 @@ def shapley_input_vs_bottleneck(model, selected, X_test, hist_input):
     plt.show()
 
 
-def shapley_bottleneck_vs_class(model, selected, X_test, hist_bn):
+def shapley_bottleneck_vs_class(model, selected, X_test, hist_bn, nrows=2, ncols=3, figsize=(8, 8)):
     func = lambda x: model.classifier.get_probs(model.classifier(x.reshape(-1, 24)))
     f_attrs = lambda inp: np.array(
         [shapley_sampling(inp, func, j, hist_bn) for j in range(model.bottleneck_nn)]
@@ -266,12 +251,8 @@ def shapley_bottleneck_vs_class(model, selected, X_test, hist_bn):
         inp = model.encoder(X_test[x, 0].reshape(1, 1, -1), False).flatten()
         attrs.append(f_attrs(inp))
 
-    fig, axs = plt.subplots(
-        nrows=int(np.ceil(len(selected)/3)), ncols=3, figsize=(8, 8), constrained_layout=True
-    )
-    axs = np.array(axs)
-    axs[2, 1].set_axis_off()
-    axs[2, 2].set_axis_off()
+    fig, axs = get_subplots(nrows, ncols, figsize, selected)
+
     for i, x in enumerate(selected):
         ax = sns.heatmap(
             attrs[i],
@@ -285,7 +266,7 @@ def shapley_bottleneck_vs_class(model, selected, X_test, hist_bn):
     plt.show()
 
 
-def shapley_input_vs_class(model, selected, X_test, hist_input):
+def shapley_input_vs_class(model, selected, X_test, hist_input, nrows=2, ncols=3, figsize=(15, 11)):
     func = lambda x: model.classifier.get_probs(
         model.classifier(model.encoder(x.reshape(-1, 1, 96), False))
     )
@@ -298,12 +279,8 @@ def shapley_input_vs_class(model, selected, X_test, hist_input):
         inp = X_test[x, 0]
         attrs.append(f_attrs(inp))
 
-    fig, axs = plt.subplots(
-        nrows=int(np.ceil(len(selected)/3)), ncols=3, figsize=(15, 11), constrained_layout=True
-    )
-    axs = np.array(axs)
-    axs[2, 1].set_axis_off()
-    axs[2, 2].set_axis_off()
+    fig, axs = get_subplots(nrows, ncols, figsize, selected)
+
     for i, x in enumerate(selected):
         ax = sns.heatmap(
             attrs[i],
@@ -326,59 +303,4 @@ def shapley_input_vs_class(model, selected, X_test, hist_input):
             ax=ax,
         )
     fig.savefig("sv_input-class_dist.png", dpi=100)
-    plt.show()
-
-
-"""
-Feature Visualization
-"""
-
-
-def feature_visualization(model, position, sel):
-    """
-    https://pytorch.org/tutorials/advanced/neural_style_tutorial.html
-    """
-    X = torch.rand((1, 1, 96), requires_grad=True)
-    optimizer = optim.LBFGS([X])
-
-    def closure():
-        optimizer.zero_grad()
-        model.zero_grad()
-        out = model(torch.sigmoid(X), apply_noise=False)[sel]
-        y = -out[0, position]
-        y.backward()
-        return y
-
-    for _ in range(100):
-        optimizer.step(closure)
-    return torch.sigmoid(X).detach().numpy().flatten()
-
-
-# Feature visualization of input with respect the bottleneck and bottleneck with respect to the class
-
-
-def input_max_neuron(model):
-    folder = "feature_visualization/input_max_neuron"
-    os.makedirs(folder, exist_ok=True)
-
-    for i in range(24):
-        a1 = feature_visualization(model, i, 2)
-        plt.plot(a1)
-        plt.title(f"Neuron {i}")
-        plt.ylim(-0.05, 1.05)
-        plt.savefig(f"{folder}/{i}.png", dpi=100)
-        plt.close()
-
-
-def neuron_max_class(model):
-    folder = "feature_visualization"
-    os.makedirs(folder, exist_ok=True)
-
-    fig, axs = plt.subplots(nrows=2, ncols=4, figsize=(25, 10), constrained_layout=True)
-    for i in range(7):  # selected):
-        a1 = feature_visualization(model, i, 1)
-        axs.flat[i].plot(a1)
-        axs.flat[i].set_title(f"Representant class {i}")
-        axs.flat[i].set_ylim(-0.05, 1.05)
-    plt.savefig(f"{folder}/neuron_max_class.png", dpi=100)
     plt.show()
