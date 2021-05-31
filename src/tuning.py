@@ -39,13 +39,14 @@ def objective(config, data, cfg, checkpoint_dir=None):
 
 def main(
     # Tune the model for several values of the variable
-    VARIABLE="bottleneck_nn",
-    values=list(range(1, 100, 10)),
+    VARIABLE="alpha",
+    values=[float(f) for f in np.linspace(0, 1, 21)],
+    # VARIABLE="bottleneck_nn",
+    # values=list(range(1, 100, 10)),
     # Dataset
     dl=ElectricDevices(),
     # Tuning settings
-    num_samples=16,
-    n_initial_points=10,
+    num_samples=64,
     config={
         "lmd": tune.loguniform(1e-8, 1e-3),
         "lr": tune.loguniform(1e-6, 1e-1),
@@ -91,8 +92,7 @@ def main(
             search_alg=HyperOptSearch(
                 metric="loss", 
                 mode="min", 
-                random_state_seed=exp,
-                n_initial_points=n_initial_points
+                random_state_seed=exp
             ),
             verbose=2,
         )

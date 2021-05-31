@@ -24,8 +24,10 @@ np.random.seed(0)
 torch.manual_seed(0)
 
 # Set the variable of cfg.model that is being modified (alpha or bottleneck_nn)
-VARIABLE = "bottleneck_nn"
-xlabel = "Number of bottleneck neurons"
+VARIABLE = "alpha"
+xlabel = "alpha"
+# VARIABLE = "bottleneck_nn"
+# xlabel = "Number of bottleneck neurons"
 
 @ray.remote
 def acc_cor(inp, data, cfg, configs):
@@ -108,8 +110,9 @@ def print_results(res, values, num_samples):
 
 def main(
     dl=ElectricDevices(),
-    values=list(range(1, 100, 10)),
-    num_samples=8
+    values=np.linspace(0, 1, 21), # alpha
+    # values=list(range(1, 100, 10)), # bottleneck_nn
+    num_samples=16
 ):
     parser = argparse.ArgumentParser()
     parser.add_argument("--num_cpus", type=int)
