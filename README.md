@@ -56,7 +56,7 @@ In `weights` there are the pretrained models with the optimal hyperparameter set
 
 The models are:
 
-- ARMA with dilation 2, 3, 5, or 7 in separate datasets. Each dilation is trained separately in `armaX.pth` with *X* the corresponding dilation.
+- ARMA with dilation 2, 3, 5, or 7 in separate datasets. Each dilation is trained separately in `armaX.pth` with **X** the corresponding dilation.
 - ARMA with dilation 2, 3, 5, or 7 in the same dataset. The pretrained model is `arma2357.pth`.
 - Electric Devices dataset. The pretrained model is `mod.pth`.
 
