@@ -5,6 +5,7 @@ import pandas as pd
 import torch
 import statsmodels.api as sm
 
+
 class Dataset(abc.ABC):
     """
     Base class for Dataset
@@ -76,6 +77,7 @@ class ElectricDevices(Dataset):
         )
         return data
 
+
 class ARMA(Dataset):
     def __init__(self, case=4):
         self.case = case
@@ -88,19 +90,30 @@ class ARMA(Dataset):
         elif self.case == 2:
             data = np.c_[ARMA.arma(n, L, [0, 0, 0.75], [0, 0, 0.35]), np.zeros(n)]
         elif self.case == 3:
-            data = np.c_[ARMA.arma(n, L, [0, 0, 0, 0, 0.75], [0, 0, 0, 0, 0.35]), np.zeros(n)]
+            data = np.c_[
+                ARMA.arma(n, L, [0, 0, 0, 0, 0.75], [0, 0, 0, 0, 0.35]), np.zeros(n)
+            ]
         elif self.case == 4:
-            data = np.c_[ARMA.arma(n, L, [0, 0, 0, 0, 0, 0, 0.75], [0, 0, 0, 0, 0, 0, 0.35]), np.zeros(n)]
+            data = np.c_[
+                ARMA.arma(n, L, [0, 0, 0, 0, 0, 0, 0.75], [0, 0, 0, 0, 0, 0, 0.35]),
+                np.zeros(n),
+            ]
         else:
             data = np.r_[
-                np.c_[ARMA.arma(n, L, [0, 0.75], [0, 0.35]), np.zeros(n)], 
+                np.c_[ARMA.arma(n, L, [0, 0.75], [0, 0.35]), np.zeros(n)],
                 np.c_[ARMA.arma(n, L, [0, 0, 0.75], [0, 0, 0.35]), np.ones(n)],
-                np.c_[ARMA.arma(n, L, [0, 0, 0, 0, 0.75], [0, 0, 0, 0, 0.35]), np.ones(n)*2],
-                np.c_[ARMA.arma(n, L, [0, 0, 0, 0, 0, 0, 0.75], [0, 0, 0, 0, 0, 0, 0.35]), np.ones(n)*3]
+                np.c_[
+                    ARMA.arma(n, L, [0, 0, 0, 0, 0.75], [0, 0, 0, 0, 0.35]),
+                    np.ones(n) * 2,
+                ],
+                np.c_[
+                    ARMA.arma(n, L, [0, 0, 0, 0, 0, 0, 0.75], [0, 0, 0, 0, 0, 0, 0.35]),
+                    np.ones(n) * 3,
+                ],
             ]
 
         np.random.shuffle(data)
-        data = data.reshape(-1, 1, L+1).astype(np.float32)
+        data = data.reshape(-1, 1, L + 1).astype(np.float32)
         data_train, data_valid, data_test = np.split(data, 3)
 
         self.data_train = Dataset.normalize(torch.from_numpy(data_train))
@@ -110,7 +123,7 @@ class ARMA(Dataset):
     @staticmethod
     def arma(n, length, ar, ma):
         ar = np.r_[1, -np.array(ar)]
-        ma = np.r_[1,  np.array(ma)]
+        ma = np.r_[1, np.array(ma)]
         arma_process = sm.tsa.ArmaProcess(ar, ma)
         data = [arma_process.generate_sample(nsample=length) for _ in range(n)]
         return np.array(data, dtype=np.float32)

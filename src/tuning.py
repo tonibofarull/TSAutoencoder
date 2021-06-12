@@ -19,6 +19,7 @@ random.seed(0)  # Seed for the hyperparameter selection
 np.random.seed(0)
 torch.manual_seed(0)
 
+
 def objective(config, data, cfg, checkpoint_dir=None):
     random.seed(1)  # Seed for the training
     np.random.seed(1)
@@ -55,7 +56,9 @@ def main(
 ):
     parser = argparse.ArgumentParser()
     parser.add_argument("--num_cpus", type=int)
-    parser.add_argument("--output", default="tuning.json", help="Output json to store results.")
+    parser.add_argument(
+        "--output", default="tuning.json", help="Output json to store results."
+    )
     parser.add_argument("--config_name", default="config", help="Config file.")
     args = parser.parse_args()
 
@@ -89,11 +92,7 @@ def main(
             name=f"{VARIABLE}_{exp}",
             num_samples=num_samples,
             config=config,
-            search_alg=HyperOptSearch(
-                metric="loss", 
-                mode="min", 
-                random_state_seed=exp
-            ),
+            search_alg=HyperOptSearch(metric="loss", mode="min", random_state_seed=exp),
             verbose=2,
         )
         best_config = analysis.get_best_config(metric="loss", mode="min")

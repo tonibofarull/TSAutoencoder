@@ -10,7 +10,7 @@ diverging_colors = sns.color_palette("vlag", as_cmap=True)
 
 def get_hist(x, alpha=1):
     x = x.reshape(-1, 1)
-    counts, bins = np.histogram(x, bins="auto")  # TODO: check auto
+    counts, bins = np.histogram(x, bins="auto")
 
     if alpha < 0:
         counts += 1
@@ -125,7 +125,9 @@ def shapley_sampling(
 # Shapley Values for different combinations of input, bottleneck, ouput and class prediction
 
 
-def shapley_input_vs_output(model, selected, X_test, hist_input, nrows=2, ncols=3, figsize=(15, 11)):
+def shapley_input_vs_output(
+    model, selected, X_test, hist_input, nrows=2, ncols=3, figsize=(15, 11)
+):
     func = lambda x: model(x.reshape(-1, 1, 96), False)[0][:, 0]
     f_attrs = lambda inp: np.array(
         [shapley_sampling(inp, func, j, hist_input) for j in range(model.length)]
@@ -163,7 +165,9 @@ def shapley_input_vs_output(model, selected, X_test, hist_input, nrows=2, ncols=
     plt.show()
 
 
-def shapley_bottleneck_vs_output(model, selected, X_test, hist_bn, nrows=2, ncols=3, figsize=(15, 11)):
+def shapley_bottleneck_vs_output(
+    model, selected, X_test, hist_bn, nrows=2, ncols=3, figsize=(15, 11)
+):
     func = lambda x: model.decoder(x)[:, 0, :]
     f_attrs = lambda inp: np.array(
         [shapley_sampling(inp, func, j, hist_bn) for j in range(model.bottleneck_nn)]
@@ -202,7 +206,9 @@ def shapley_bottleneck_vs_output(model, selected, X_test, hist_bn, nrows=2, ncol
     plt.show()
 
 
-def shapley_input_vs_bottleneck(model, selected, X_test, hist_input, nrows=2, ncols=3, figsize=(15, 11)):
+def shapley_input_vs_bottleneck(
+    model, selected, X_test, hist_input, nrows=2, ncols=3, figsize=(15, 11)
+):
     func = lambda x: model.encoder(x.reshape(-1, 1, 96), False)
     f_attrs = lambda inp: np.array(
         [shapley_sampling(inp, func, j, hist_input) for j in range(model.length)]
@@ -240,7 +246,9 @@ def shapley_input_vs_bottleneck(model, selected, X_test, hist_input, nrows=2, nc
     plt.show()
 
 
-def shapley_bottleneck_vs_class(model, selected, X_test, hist_bn, nrows=2, ncols=3, figsize=(8, 8)):
+def shapley_bottleneck_vs_class(
+    model, selected, X_test, hist_bn, nrows=2, ncols=3, figsize=(8, 8)
+):
     func = lambda x: model.classifier.get_probs(model.classifier(x.reshape(-1, 24)))
     f_attrs = lambda inp: np.array(
         [shapley_sampling(inp, func, j, hist_bn) for j in range(model.bottleneck_nn)]
@@ -266,7 +274,9 @@ def shapley_bottleneck_vs_class(model, selected, X_test, hist_bn, nrows=2, ncols
     plt.show()
 
 
-def shapley_input_vs_class(model, selected, X_test, hist_input, nrows=2, ncols=3, figsize=(15, 11)):
+def shapley_input_vs_class(
+    model, selected, X_test, hist_input, nrows=2, ncols=3, figsize=(15, 11)
+):
     func = lambda x: model.classifier.get_probs(
         model.classifier(model.encoder(x.reshape(-1, 1, 96), False))
     )

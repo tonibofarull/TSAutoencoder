@@ -16,7 +16,7 @@ def get_predictions(model, X_test):
     return X_testp, y_testp, bn
 
 
-def reconstruction(X_test, X_testp):
+def reconstruction(X_test, X_testp, y_test):
     cors = [
         distance_corr(X_testp[i, 0], X_test[i, 0].detach().numpy(), n_boot=None)
         for i in range(X_test.shape[0])
@@ -29,7 +29,13 @@ def reconstruction(X_test, X_testp):
             / (torch.max(X_test) - torch.min(X_test))
         ).item(),
     )
-    print()
+    data = pd.DataFrame(np.c_[cors, y_test], columns=["Correlation", "Class"])
+    sns.displot(
+        data, x="Correlation", hue="Class", element="step", palette="tab10", aspect=1.5
+    )
+    plt.xlim(0, 1)
+    plt.savefig("distcor_distrib.png", dpi=100)
+    plt.show()
 
 
 def accuracy(y_test, y_testp):
@@ -42,11 +48,17 @@ def accuracy(y_test, y_testp):
     plt.show()
 
 
-def observation_reconstruction(selected, X_test, X_testp, nrows=3, ncols=3, figsize=(14, 12)):
+def observation_reconstruction(
+    selected, X_test, X_testp, nrows=3, ncols=3, figsize=(14, 12)
+):
     fig, axs = get_subplots(nrows, ncols, figsize, selected)
     for i, x in enumerate(selected):
         sns.lineplot(
-            x=range(96), y=X_test[x, 0], label="Original", color="green", ax=axs.flatten()[i]
+            x=range(96),
+            y=X_test[x, 0],
+            label="Original",
+            color="green",
+            ax=axs.flatten()[i],
         )
         sns.lineplot(
             x=range(96),
@@ -131,8 +143,10 @@ def baseline(data_train, data_valid, data_test):
 
 
 def get_subplots(nrows, ncols, figsize, selected):
-    fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=figsize, constrained_layout=True)
+    fig, axs = plt.subplots(
+        nrows=nrows, ncols=ncols, figsize=figsize, constrained_layout=True
+    )
     axs = np.array(axs)
-    for i in range(nrows*ncols - len(selected)):
-        axs.flatten()[-1-i].set_axis_off()
+    for i in range(nrows * ncols - len(selected)):
+        axs.flatten()[-1 - i].set_axis_off()
     return fig, axs

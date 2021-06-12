@@ -38,9 +38,7 @@ class Decoder(nn.Module):
         self.act1 = nn.LeakyReLU()
         self.deco1 = nn.ModuleList(
             [
-                nn.ConvTranspose1d(
-                    M, 1, kernel_size=Lf, dilation=d, padding=d*(Lf-1)//2
-                )
+                nn.ConvTranspose1d(M, 1, kernel_size=Lf, dilation=d, padding=d*(Lf-1)//2)
                 for d in dilation
             ]
         )
