@@ -126,7 +126,7 @@ def shapley_sampling(
 
 
 def shapley_input_vs_output(
-    model, selected, X_test, hist_input, nrows=2, ncols=3, figsize=(15, 11)
+    model, selected, X_test, hist_input, nrows=3, ncols=3
 ):
     func = lambda x: model(x.reshape(-1, 1, 96), False)[0][:, 0]
     f_attrs = lambda inp: np.array(
@@ -137,7 +137,7 @@ def shapley_input_vs_output(
         print(i, end=" ")
         attrs.append(f_attrs(X_test[x, 0]))
 
-    fig, axs = get_subplots(nrows, ncols, figsize, selected)
+    fig, axs = get_subplots(nrows, ncols, (5*ncols, 5*nrows), selected)
 
     for i, x in enumerate(selected):
         ax = sns.heatmap(
@@ -161,12 +161,12 @@ def shapley_input_vs_output(
             ax=ax,
         )
         ax.legend()
-    fig.savefig("sv_input-output_dist.png", dpi=100)
+    fig.savefig("input-output_dist.png", dpi=100)
     plt.show()
 
 
 def shapley_bottleneck_vs_output(
-    model, selected, X_test, hist_bn, nrows=2, ncols=3, figsize=(15, 11)
+    model, selected, X_test, hist_bn, nrows=3, ncols=3
 ):
     func = lambda x: model.decoder(x)[:, 0, :]
     f_attrs = lambda inp: np.array(
@@ -178,7 +178,7 @@ def shapley_bottleneck_vs_output(
         inp = model.encoder(X_test[x, 0].reshape(1, 1, -1), False).flatten()
         attrs.append(f_attrs(inp))
 
-    fig, axs = get_subplots(nrows, ncols, figsize, selected)
+    fig, axs = get_subplots(nrows, ncols, (5*ncols, 5*nrows), selected)
 
     for i, x in enumerate(selected):
         ax = sns.heatmap(
@@ -202,12 +202,12 @@ def shapley_bottleneck_vs_output(
             ax=ax,
         )
         ax.legend()
-    fig.savefig("sv_bottleneck-output_dist.png", dpi=100)
+    fig.savefig("bottleneck-output_dist.png", dpi=100)
     plt.show()
 
 
 def shapley_input_vs_bottleneck(
-    model, selected, X_test, hist_input, nrows=2, ncols=3, figsize=(15, 11)
+    model, selected, X_test, hist_input, nrows=3, ncols=3
 ):
     func = lambda x: model.encoder(x.reshape(-1, 1, 96), False)
     f_attrs = lambda inp: np.array(
@@ -219,7 +219,7 @@ def shapley_input_vs_bottleneck(
         inp = X_test[x, 0]
         attrs.append(f_attrs(inp))
 
-    fig, axs = get_subplots(nrows, ncols, figsize, selected)
+    fig, axs = get_subplots(nrows, ncols, (5*ncols, 5*nrows), selected)
 
     for i, x in enumerate(selected):
         ax = sns.heatmap(
@@ -242,12 +242,12 @@ def shapley_input_vs_bottleneck(
             color="purple",
             ax=ax,
         )
-    fig.savefig("sv_input-bottleneck_dist.png", dpi=100)
+    fig.savefig("input-bottleneck_dist.png", dpi=100)
     plt.show()
 
 
 def shapley_bottleneck_vs_class(
-    model, selected, X_test, hist_bn, nrows=2, ncols=3, figsize=(8, 8)
+    model, selected, X_test, hist_bn, nrows=3, ncols=3
 ):
     func = lambda x: model.classifier.get_probs(model.classifier(x.reshape(-1, 24)))
     f_attrs = lambda inp: np.array(
@@ -259,7 +259,7 @@ def shapley_bottleneck_vs_class(
         inp = model.encoder(X_test[x, 0].reshape(1, 1, -1), False).flatten()
         attrs.append(f_attrs(inp))
 
-    fig, axs = get_subplots(nrows, ncols, figsize, selected)
+    fig, axs = get_subplots(nrows, ncols, (3*ncols, 3*nrows), selected)
 
     for i, x in enumerate(selected):
         ax = sns.heatmap(
@@ -270,12 +270,12 @@ def shapley_bottleneck_vs_class(
             cbar_kws={"orientation": "horizontal"},
         )
         ax.set(xlabel="Output Class", ylabel="Input Bottleneck")
-    fig.savefig("sv_bottleneck-class_dist.png", dpi=100)
+    fig.savefig("bottleneck-class_dist.png", dpi=100)
     plt.show()
 
 
 def shapley_input_vs_class(
-    model, selected, X_test, hist_input, nrows=2, ncols=3, figsize=(15, 11)
+    model, selected, X_test, hist_input, nrows=3, ncols=3
 ):
     func = lambda x: model.classifier.get_probs(
         model.classifier(model.encoder(x.reshape(-1, 1, 96), False))
@@ -289,7 +289,7 @@ def shapley_input_vs_class(
         inp = X_test[x, 0]
         attrs.append(f_attrs(inp))
 
-    fig, axs = get_subplots(nrows, ncols, figsize, selected)
+    fig, axs = get_subplots(nrows, ncols, (5*ncols, 5*nrows), selected)
 
     for i, x in enumerate(selected):
         ax = sns.heatmap(
@@ -299,7 +299,7 @@ def shapley_input_vs_class(
             cmap=diverging_colors,
             cbar_kws={"orientation": "horizontal"},
         )
-        ax.set(xlabel="Input Time Series", ylabel="Output Bottleneck")
+        ax.set(xlabel="Input Time Series", ylabel="Output Class")
 
         ax = axs.flatten()[i].twinx()
         sns.lineplot(
@@ -312,5 +312,5 @@ def shapley_input_vs_class(
             color="purple",
             ax=ax,
         )
-    fig.savefig("sv_input-class_dist.png", dpi=100)
+    fig.savefig("input-class_dist.png", dpi=100)
     plt.show()

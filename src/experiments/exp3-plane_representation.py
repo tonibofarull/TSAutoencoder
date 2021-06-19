@@ -70,7 +70,7 @@ def with_pca(X_train, X_test, y_test):
 
 def main():
     with initialize_config_dir(config_dir=os.path.abspath("../configs")):
-        cfg = compose(config_name="arma5")
+        cfg = compose(config_name="arma2357")
 
     cfg.model.bottleneck_nn = 2
 

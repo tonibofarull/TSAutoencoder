@@ -10,7 +10,7 @@ Implementation of a Dilated Convolutional Autoencoder for univariate Time Series
 
 ## Requirements
 
-Python 3.8 required. Some packages are incompatible with version 3.9. See [here](https://github.com/ray-project/ray/issues/11287).
+Developed for Python 3.8.
 
 Install dependencies using pip,
 
